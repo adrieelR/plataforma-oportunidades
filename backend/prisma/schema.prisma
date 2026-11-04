@@ -1,0 +1,291 @@
+// Esquema de base de datos de la plataforma de oportunidades para estudiantes.
+// Se deriva del diagrama de clases (15 clases). La herencia de Usuario se modela
+// con una tabla base (Usuario) y una tabla por actor (Estudiante, Empresa, Administrador).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------- Enumeraciones
+
+enum Rol {
+  ESTUDIANTE
+  EMPRESA
+  ADMINISTRADOR
+}
+
+enum EstadoCuenta {
+  PENDIENTE_VERIFICACION
+  ACTIVA
+  SUSPENDIDA
+}
+
+enum EstadoAprobacion {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+}
+
+enum TipoOferta {
+  PRACTICA
+  EMPLEO
+  CAPACITACION
+  SERVICIO
+}
+
+enum Modalidad {
+  PRESENCIAL
+  REMOTA
+  HIBRIDA
+}
+
+enum EstadoOferta {
+  BORRADOR
+  PUBLICADA
+  CERRADA
+  VENCIDA
+  OCULTA
+  ELIMINADA
+}
+
+enum TipoPostulacion {
+  POSTULACION
+  INSCRIPCION
+}
+
+enum EstadoPostulacion {
+  ENVIADA
+  PRESELECCIONADA
+  ACEPTADA
+  RECHAZADA
+  CANCELADA
+}
+
+enum TipoNotificacion {
+  VERIFICACION_CORREO
+  CONFIRMACION_POSTULACION
+  CAMBIO_ESTADO_POSTULACION
+  APROBACION_EMPRESA
+  CAMBIO_ESTADO_CUENTA
+  RECUPERACION_CONTRASENA
+}
+
+enum EstadoEnvio {
+  PENDIENTE
+  ENVIADA
+  FALLIDA
+}
+
+enum EstadoReporte {
+  PENDIENTE
+  RESUELTO
+  DESCARTADO
+}
+
+enum DecisionModeracion {
+  MANTENER
+  OCULTAR
+  ELIMINAR
+}
+
+enum TipoToken {
+  VERIFICACION
+  RECUPERACION_CONTRASENA
+}
+
+// ---------------------------------------------------------------- Usuarios
+
+model Usuario {
+  id             Int          @id @default(autoincrement())
+  correo         String       @unique
+  contrasenaHash String // contraseña cifrada con bcrypt (RNF-01)
+  rol            Rol
+  estadoCuenta   EstadoCuenta @default(PENDIENTE_VERIFICACION)
+  fechaRegistro  DateTime     @default(now())
+
+  estudiante    Estudiante?
+  empresa       Empresa?
+  administrador Administrador?
+
+  tokens            TokenVerificacion[]
+  notificaciones    Notificacion[]
+  mensajesEnviados  Mensaje[]           @relation("MensajesEnviados")
+  mensajesRecibidos Mensaje[]           @relation("MensajesRecibidos")
+  reportes          Reporte[]
+}
+
+model Estudiante {
+  id               Int     @id @default(autoincrement())
+  usuarioId        Int     @unique
+  nombres          String
+  apellidos        String
+  carrera          String
+  descripcionPerfil String?
+  verificado       Boolean @default(false)
+  institucionId    Int?
+
+  usuario       Usuario               @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  institucion   InstitucionEducativa? @relation(fields: [institucionId], references: [id])
+  postulaciones Postulacion[]
+}
+
+model Empresa {
+  id               Int              @id @default(autoincrement())
+  usuarioId        Int              @unique
+  razonSocial      String
+  rut              String           @unique
+  rubro            String
+  descripcion      String?
+  estadoAprobacion EstadoAprobacion @default(PENDIENTE)
+  fechaAprobacion  DateTime?
+
+  usuario Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  ofertas Oferta[]
+}
+
+model Administrador {
+  id        Int    @id @default(autoincrement())
+  usuarioId Int    @unique
+  nombre    String
+
+  usuario      Usuario      @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  moderaciones Moderacion[]
+}
+
+model InstitucionEducativa {
+  id           Int    @id @default(autoincrement())
+  nombre       String
+  dominioCorreo String @unique // por ejemplo "inacapmail.cl"
+
+  estudiantes Estudiante[]
+}
+
+model TokenVerificacion {
+  id              Int       @id @default(autoincrement())
+  usuarioId       Int
+  token           String    @unique
+  tipo            TipoToken
+  fechaExpiracion DateTime
+  usado           Boolean   @default(false)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+}
+
+// ---------------------------------------------------------------- Ofertas y postulaciones
+
+model Oferta {
+  id                Int          @id @default(autoincrement())
+  empresaId         Int
+  titulo            String
+  descripcion       String
+  tipo              TipoOferta
+  modalidad         Modalidad
+  area              String
+  ubicacion         String
+  cupos             Int?
+  estado            EstadoOferta @default(BORRADOR)
+  fechaPublicacion  DateTime?
+  fechaLimite       DateTime
+
+  empresa       Empresa       @relation(fields: [empresaId], references: [id])
+  postulaciones Postulacion[]
+  mensajes      Mensaje[]
+  reportes      Reporte[]
+  moderaciones  Moderacion[]
+
+  @@index([estado, tipo])
+  @@index([empresaId])
+}
+
+model Postulacion {
+  id               Int               @id @default(autoincrement())
+  estudianteId     Int
+  ofertaId         Int
+  tipo             TipoPostulacion   @default(POSTULACION)
+  estado           EstadoPostulacion @default(ENVIADA)
+  fechaPostulacion DateTime          @default(now())
+
+  estudiante Estudiante  @relation(fields: [estudianteId], references: [id])
+  oferta     Oferta      @relation(fields: [ofertaId], references: [id])
+  documentos Documento[]
+
+  // Un estudiante no puede postular dos veces a la misma oferta (CU-21).
+  @@unique([estudianteId, ofertaId])
+}
+
+model Documento {
+  id            Int    @id @default(autoincrement())
+  postulacionId Int
+  nombreArchivo String
+  formato       String
+  bytes         Int
+  ruta          String
+
+  postulacion Postulacion @relation(fields: [postulacionId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------- Comunicación y notificaciones
+
+model Mensaje {
+  id             Int      @id @default(autoincrement())
+  ofertaId       Int
+  remitenteId    Int
+  destinatarioId Int
+  contenido      String
+  fechaEnvio     DateTime @default(now())
+  leido          Boolean  @default(false)
+
+  oferta       Oferta  @relation(fields: [ofertaId], references: [id])
+  remitente    Usuario @relation("MensajesEnviados", fields: [remitenteId], references: [id])
+  destinatario Usuario @relation("MensajesRecibidos", fields: [destinatarioId], references: [id])
+}
+
+model Notificacion {
+  id            Int              @id @default(autoincrement())
+  usuarioId     Int
+  tipo          TipoNotificacion
+  asunto        String
+  cuerpo        String
+  estadoEnvio   EstadoEnvio      @default(PENDIENTE)
+  fechaCreacion DateTime         @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+}
+
+// ---------------------------------------------------------------- Moderación
+
+model Reporte {
+  id           Int           @id @default(autoincrement())
+  ofertaId     Int
+  usuarioId    Int // quien denuncia
+  motivo       String
+  estado       EstadoReporte @default(PENDIENTE)
+  fechaReporte DateTime      @default(now())
+
+  oferta     Oferta      @relation(fields: [ofertaId], references: [id])
+  usuario    Usuario     @relation(fields: [usuarioId], references: [id])
+  moderacion Moderacion?
+}
+
+model Moderacion {
+  id              Int                @id @default(autoincrement())
+  ofertaId        Int
+  administradorId Int
+  reporteId       Int?               @unique
+  decision        DecisionModeracion
+  motivo          String
+  fechaDecision   DateTime           @default(now())
+
+  oferta        Oferta        @relation(fields: [ofertaId], references: [id])
+  administrador Administrador @relation(fields: [administradorId], references: [id])
+  reporte       Reporte?      @relation(fields: [reporteId], references: [id])
+}
