@@ -29,16 +29,43 @@ const helmet = require('helmet');
 
 const app = express();
 
+// agregamos otra constante para el prisma BD
+
+const prisma = require('./db/prisma');
+
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
 app.get('/api/salud', (req, res) => {
   res.json({ estado: 'ok' });
+  
 });
 
 module.exports = app;
 
+// ruta de prueba del servidor
 app.get('/api/version',(req,res)=>{
   res.json({prueba: 'holaMundo'})
+});
+
+// ruta del servidor
+app.get('/api/salud/db', async (req,res)=>{
+  try{
+    const usuarios = await prisma.usuario.count()
+    res.json({ estado: 'ok', usuarios});
+  }catch (error){
+    console.error(error);
+    res.status(500).json({mensaje: 'error interno del servidor'});
+  }
+});
+// ruta que devuelva todas las intituciones inscritas
+app.get('/api/instituciones', async (req,res)=>{
+  try{
+    const institucion = await prisma.institucionEducativa.findMany()
+    res.json({ estado: 'ok', institucion});
+  }catch (error){
+    console.error(error);
+    res.status(500).json({mensaje: 'error interno del servidor'});
+  }
 });
