@@ -28,13 +28,13 @@ const registrarEstudiante = async ({ nombres, apellidos, carrera, correo, contra
   }
 
   //3. La constraseña se guarda cifrada, nunca en claro (OWASP A02. RNF-01)
-  const constranaHash = await bcrypt.hash(contrasena, RONDAS_BCRYPT);
+  const contrasenaHash = await bcrypt.hash(contrasena, RONDAS_BCRYPT);
 
   // 4. se crea el usuario y su perfil de estudiante en un solo paso
   const usuario = await prisma.usuario.create({
     data: {
         correo,
-        constranaHash,
+        contrasenaHash,
         rol: 'ESTUDIANTE',
         estudiante: {
             create: {nombres, apellidos, carrera, institucionId: institucion.id},
