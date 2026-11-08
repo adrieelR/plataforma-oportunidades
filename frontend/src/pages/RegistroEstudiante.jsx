@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { registrarEstudiante } from '../api/auth'
+import AuthLayout from '../components/AuthLayout'
 import Cargando from '../components/Cargando'
 import Mensaje from '../components/Mensaje'
-import { registrarEstudiante } from '../api/auth'
-import './auth.css'
 
 const FORMULARIO_INICIAL = {
   nombres: '',
@@ -113,33 +113,30 @@ export default function RegistroEstudiante() {
 
   if (registrado) {
     return (
-      <section className="auth">
-        <div className="auth__panel">
-          <header className="auth__encabezado">
-            <h1>Registro completado</h1>
-          </header>
+      <AuthLayout
+        titulo="Registro completado"
+        descripcion="Tu cuenta fue creada correctamente."
+      >
+        <Mensaje tipo="exito">
+          Cuenta creada. Falta verificar tu correo
+        </Mensaje>
 
-          <Mensaje tipo="exito">
-            Cuenta creada. Falta verificar tu correo
-          </Mensaje>
-
-          <Link to="/login" className="boton boton--primario boton--bloque">
-            Ir a iniciar sesión
-          </Link>
-        </div>
-      </section>
+        <Link to="/login" className="boton boton--primario boton--bloque">
+          Ir a iniciar sesión
+        </Link>
+      </AuthLayout>
     )
   }
 
   return (
-    <section className="auth">
-      <div className="auth__panel auth__panel--ancho">
-        <header className="auth__encabezado">
-          <h1>Crear cuenta de estudiante</h1>
-          <p>Usa tu correo institucional para registrarte en la plataforma.</p>
-        </header>
-
-        {errorGeneral && <Mensaje tipo="error">{errorGeneral}</Mensaje>}
+    <AuthLayout
+      titulo="Crear cuenta de estudiante"
+      descripcion="Usa tu correo institucional para registrarte en la plataforma."
+      ancho
+      marcaTitulo="Tu perfil, tus oportunidades"
+      marcaTexto="Crea tu cuenta para postular a prácticas, empleos y capacitaciones desde un solo lugar."
+    >
+      {errorGeneral && <Mensaje tipo="error">{errorGeneral}</Mensaje>}
 
         <form className="formulario" onSubmit={manejarEnvio} noValidate>
           <div className="formulario__fila">
@@ -298,7 +295,6 @@ export default function RegistroEstudiante() {
         <p className="auth__pie">
           ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
         </p>
-      </div>
-    </section>
+    </AuthLayout>
   )
 }

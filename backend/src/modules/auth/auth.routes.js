@@ -3,7 +3,7 @@ const validar = require('../../middlewares/validate');
 const { registroEstudianteSchema, loginSchema } = require('./auth.schema');
 const authController = require('./auth.controller');
 const { limitadorLogin } = require('../../middlewares/rateLimit');
-
+const { autenticar } = require('../../middlewares/auth');
 const router = Router();
 
 router.post(
@@ -17,6 +17,11 @@ router.post(
     limitadorLogin,
     validar(loginSchema),
     authController.login
-),
+);
 
+router.get(
+    '/perfil',
+    autenticar,
+    authController.perfil
+);
 module.exports = router;

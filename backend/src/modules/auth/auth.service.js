@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const prisma = require('../../db/prisma');
 const jwt = require('jsonwebtoken');
+const { tr } = require('zod/v4/locales');
 
 const RONDAS_BCRYPT = 12;
 // hash de relleno para que el tiempo de respuesta sea parecido exista o no el correo
@@ -80,5 +81,33 @@ const iniciarSesion = async ({correo, contrasena}) =>{
   };
 };
 
-module.exports = {registrarEstudiante, iniciarSesion};
+const obtenerPerfil = async (usuarioId) => {
+  const usuario = await prisma.usuario.findUnique({
+    where: {id: usuarioId},
+    select: {
+      id:true,
+      correo:true,
+      rol:true,
+      estadoCuenta:true,
+      estudiante: {
+        select: {
+          nombres: true,
+          apellidos: true,
+          carrera: true,
+          institucion: {select: {nombre:true }},
+        },
+      },
+      administrador: {select: { nombre:true }},
+    },
+  });
+
+  if (!usuario) {
+    throw crearError('Usuario no encontrado', 400);
+  }
+
+  const {estudiante, empresa, administrador, ...datosUsuario} = usuario;
+  
+  return {usuario: datosUsuario, perfil: estudiante || empresa || administrador};
+};
+module.exports = {registrarEstudiante, iniciarSesion, obtenerPerfil};
 

@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import AuthLayout from '../components/AuthLayout'
 import Cargando from '../components/Cargando'
 import Mensaje from '../components/Mensaje'
 import { useAuth } from '../context/useAuth'
 import { inicioSegunRol } from '../utils/roles'
-import './auth.css'
 
 const FORMULARIO_INICIAL = {
   correo: '',
@@ -90,77 +90,79 @@ export default function Login() {
   }
 
   return (
-    <section className="auth">
-      <div className="auth__panel">
-        <header className="auth__encabezado">
-          <h1>Iniciar sesión</h1>
-          <p>Accede con tu cuenta para revisar las oportunidades disponibles.</p>
-        </header>
+    <AuthLayout
+      titulo="Iniciar sesión"
+      descripcion="Accede con tu cuenta para revisar las oportunidades disponibles."
+      marcaTitulo="Conecta con oportunidades reales"
+      marcaTexto="Encuentra prácticas, empleos y capacitaciones, o publica ofertas para llegar a nuevos talentos."
+    >
+      {location.state?.sesionExpirada && !errorGeneral && (
+        <Mensaje tipo="info">
+          Tu sesión expiró. Vuelve a iniciar sesión.
+        </Mensaje>
+      )}
 
-        {location.state?.sesionExpirada && !errorGeneral && (
-          <Mensaje tipo="info">
-            Tu sesión expiró. Vuelve a iniciar sesión.
-          </Mensaje>
-        )}
+      {errorGeneral && <Mensaje tipo="error">{errorGeneral}</Mensaje>}
 
-        {errorGeneral && <Mensaje tipo="error">{errorGeneral}</Mensaje>}
+      <form className="formulario" onSubmit={manejarEnvio} noValidate>
+        <div className="campo">
+          <label htmlFor="login-correo">Correo</label>
+          <input
+            id="login-correo"
+            name="correo"
+            type="email"
+            value={formulario.correo}
+            onChange={manejarCambio}
+            autoComplete="email"
+            aria-invalid={Boolean(erroresCampo.correo)}
+            aria-describedby={
+              erroresCampo.correo ? 'login-correo-error' : undefined
+            }
+          />
+          {erroresCampo.correo && (
+            <span className="campo__error" id="login-correo-error">
+              {erroresCampo.correo}
+            </span>
+          )}
+        </div>
 
-        <form className="formulario" onSubmit={manejarEnvio} noValidate>
-          <div className="campo">
-            <label htmlFor="login-correo">Correo</label>
-            <input
-              id="login-correo"
-              name="correo"
-              type="email"
-              value={formulario.correo}
-              onChange={manejarCambio}
-              autoComplete="email"
-              aria-invalid={Boolean(erroresCampo.correo)}
-              aria-describedby={
-                erroresCampo.correo ? 'login-correo-error' : undefined
-              }
-            />
-            {erroresCampo.correo && (
-              <span className="campo__error" id="login-correo-error">
-                {erroresCampo.correo}
-              </span>
-            )}
-          </div>
+        <div className="campo">
+          <label htmlFor="login-contrasena">Contraseña</label>
+          <input
+            id="login-contrasena"
+            name="contrasena"
+            type="password"
+            value={formulario.contrasena}
+            onChange={manejarCambio}
+            autoComplete="current-password"
+            aria-invalid={Boolean(erroresCampo.contrasena)}
+            aria-describedby={
+              erroresCampo.contrasena ? 'login-contrasena-error' : undefined
+            }
+          />
+          {erroresCampo.contrasena && (
+            <span className="campo__error" id="login-contrasena-error">
+              {erroresCampo.contrasena}
+            </span>
+          )}
+        </div>
 
-          <div className="campo">
-            <label htmlFor="login-contrasena">Contraseña</label>
-            <input
-              id="login-contrasena"
-              name="contrasena"
-              type="password"
-              value={formulario.contrasena}
-              onChange={manejarCambio}
-              autoComplete="current-password"
-              aria-invalid={Boolean(erroresCampo.contrasena)}
-              aria-describedby={
-                erroresCampo.contrasena ? 'login-contrasena-error' : undefined
-              }
-            />
-            {erroresCampo.contrasena && (
-              <span className="campo__error" id="login-contrasena-error">
-                {erroresCampo.contrasena}
-              </span>
-            )}
-          </div>
+        <button
+          type="submit"
+          className="boton boton--primario boton--bloque"
+          disabled={enviando}
+        >
+          {enviando ? <Cargando texto="Ingresando..." /> : 'Ingresar'}
+        </button>
+      </form>
 
-          <button
-            type="submit"
-            className="boton boton--primario boton--bloque"
-            disabled={enviando}
-          >
-            {enviando ? <Cargando texto="Ingresando..." /> : 'Ingresar'}
-          </button>
-        </form>
-
-        <p className="auth__pie">
-          ¿Aún no tienes cuenta? <Link to="/registro">Regístrate</Link>
-        </p>
-      </div>
-    </section>
+      <p className="auth__pie">
+        ¿Aún no tienes cuenta? <Link to="/registro">Regístrate</Link>
+      </p>
+      <p className="auth__pie auth__pie--secundario">
+        ¿Eres una empresa?{' '}
+        <Link to="/registro-empresa">Registra tu empresa</Link>
+      </p>
+    </AuthLayout>
   )
 }
