@@ -1,5 +1,6 @@
 module.exports = {
-    textEnviroment: 'node',
-    setupFiles : ['./tests/setup.js'],
-    collectCoverageFrom: ['src/**/*.js', '!src/server.js'],
+  testEnvironment: 'node',
+  setupFiles: ['./tests/setup.js'],
+  maxWorkers: 1,
+  collectCoverageFrom: ['src/**/*.js', '!src/server.js'],
 };
