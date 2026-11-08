@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({quiet: true});
 
 // las pruebas usan siempre la base de datos de pruebas, nunca la de desarrollo
 

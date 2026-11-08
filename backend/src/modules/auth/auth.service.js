@@ -23,7 +23,7 @@ const registrarEstudiante = async ({ nombres, apellidos, carrera, correo, contra
   const existente = await prisma.usuario.findUnique({where: {correo}});
 
   if (existente){
-    throw crearError('Ya existe una cuenta con ese correo',400);
+    throw crearError('Ya existe una cuenta con ese correo',409);
 
   }
 
