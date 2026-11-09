@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { decidirEmpresa, listarEmpresas } from '../api/admin'
 import Avatar from '../components/Avatar'
 import Cargando from '../components/Cargando'
@@ -15,10 +15,15 @@ export default function AdminEmpresas() {
   const [mensaje, setMensaje] = useState('')
   const [procesandoId, setProcesandoId] = useState(null)
 
+  const cargarEmpresas = useCallback(
+    () => listarEmpresas({ estado: 'PENDIENTE' }),
+    [],
+  )
+
   useEffect(() => {
     let activo = true
 
-    listarEmpresas({ estado: 'PENDIENTE' })
+    cargarEmpresas()
       .then((respuesta) => {
         if (activo) {
           setEmpresas(respuesta.empresas)
@@ -40,7 +45,7 @@ export default function AdminEmpresas() {
     return () => {
       activo = false
     }
-  }, [])
+  }, [cargarEmpresas])
 
   const decidir = async (empresa, decision) => {
     setMensaje('')
@@ -59,6 +64,18 @@ export default function AdminEmpresas() {
       )
     } catch (fallo) {
       setError(fallo?.mensaje || 'No se pudo actualizar la empresa.')
+
+      if (fallo?.estado === 409) {
+        try {
+          const respuesta = await cargarEmpresas()
+          setEmpresas(respuesta.empresas)
+        } catch (recarga) {
+          setError(
+            recarga?.mensaje ||
+              'No se pudieron cargar las empresas pendientes.',
+          )
+        }
+      }
     } finally {
       setProcesandoId(null)
     }

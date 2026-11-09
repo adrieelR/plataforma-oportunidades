@@ -97,6 +97,15 @@ const obtenerPerfil = async (usuarioId) => {
           institucion: {select: {nombre:true }},
         },
       },
+      empresa: {
+        select: {
+          razonSocial:true,
+          rut:true,
+          rubro:true,
+          descripcion:true,
+          estadoAprobacion:true,
+        },
+      },
       administrador: {select: { nombre:true }},
     },
   });
@@ -109,5 +118,37 @@ const obtenerPerfil = async (usuarioId) => {
   
   return {usuario: datosUsuario, perfil: estudiante || empresa || administrador};
 };
-module.exports = {registrarEstudiante, iniciarSesion, obtenerPerfil};
+
+const registrarEmpresa = async ({ razonSocial, rut, rubro, descripcion, correo, contrasena }) => {
+  const usuarioExistente = await prisma.usuario.findUnique({ where: { correo } });
+
+  if (usuarioExistente) {
+    throw crearError('Ya existe una cuenta con ese correo', 409);
+  }
+
+  const empresaExistente = await prisma.empresa.findUnique({ where: { rut } });
+
+  if (empresaExistente) {
+    throw crearError('Ya existe una empresa registrada con ese RUT', 409);
+  }
+
+  const contrasenaHash = await bcrypt.hash(contrasena, RONDAS_BCRYPT);
+
+  // La cuenta queda ACTIVA, pero la empresa queda PENDIENTE de aprobación (RF-03)
+  const usuario = await prisma.usuario.create({
+    data: {
+      correo,
+      contrasenaHash,
+      rol: 'EMPRESA',
+      estadoCuenta: 'ACTIVA',
+      empresa: {
+        create: { razonSocial, rut, rubro, descripcion },
+      },
+    },
+    select: { id: true, correo: true, rol: true, estadoCuenta: true },
+  });
+
+  return usuario;
+};
+module.exports = {registrarEstudiante, registrarEmpresa, iniciarSesion, obtenerPerfil};
 

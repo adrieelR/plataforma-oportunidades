@@ -74,10 +74,10 @@ Estado: LISTO = ya existe en el backend. PRÓXIMO = se está programando; hasta 
 | Método y ruta | Quién | Cuerpo | Respuesta exitosa | Errores | Estado |
 |---|---|---|---|---|---|
 | `POST /auth/registro` | público | `{ nombres, apellidos, carrera, correo, contrasena }` | 201 `{ mensaje, usuario: { id, correo, rol, estadoCuenta } }` | 400 datos inválidos o correo no institucional; 409 correo repetido | LISTO |
-| `POST /auth/registro-empresa` | público | `{ razonSocial, rut, rubro, descripcion?, correo, contrasena }` | 201 `{ mensaje, usuario }` | 400, 409 | PRÓXIMO |
-| `POST /auth/login` | público | `{ correo, contrasena }` | 200 `{ token, usuario: { id, correo, rol, estadoCuenta } }` | 401 credenciales incorrectas; 403 cuenta suspendida | PRÓXIMO |
+| `POST /auth/registro-empresa` | público | `{ razonSocial, rut, rubro, descripcion?, correo, contrasena }` | 201 `{ mensaje, usuario }` | 400, 409 | LISTO |
+| `POST /auth/login` | público | `{ correo, contrasena }` | 200 `{ token, usuario: { id, correo, rol, estadoCuenta } }` | 401 credenciales incorrectas; 403 cuenta suspendida | LISTO |
 | `POST /auth/verificar` | público | `{ token }` | 200 `{ mensaje }` | 400 enlace inválido, vencido o ya usado | PRÓXIMO |
-| `GET /auth/perfil` | autenticado | (sin cuerpo) | 200 `{ usuario, perfil }` | 401 | PRÓXIMO |
+| `GET /auth/perfil` | autenticado | (sin cuerpo) | 200 `{ usuario, perfil }` | 401 | LISTO |
 
 `perfil` según el rol:
 - ESTUDIANTE: `{ nombres, apellidos, carrera, institucion: { nombre } }`
@@ -112,8 +112,8 @@ Verificación simulada: en este prototipo el correo no se envía. El backend imp
 
 | Método y ruta | Quién | Cuerpo o parámetros | Respuesta exitosa | Errores | Estado |
 |---|---|---|---|---|---|
-| `GET /admin/empresas` | ADMINISTRADOR | query: `estado` (por defecto `PENDIENTE`) | 200 `{ empresas: [ { id, razonSocial, rut, rubro, descripcion, estadoAprobacion, correo } ] }` | 401, 403 | PRÓXIMO |
-| `PATCH /admin/empresas/:id/aprobacion` | ADMINISTRADOR | `{ decision }` con `APROBAR` o `RECHAZAR` | 200 `{ empresa: { id, estadoAprobacion } }` | 400; 403; 404 | PRÓXIMO |
+| `GET /admin/empresas` | ADMINISTRADOR | query: `estado` (por defecto `PENDIENTE`) | 200 `{ empresas: [ { id, razonSocial, rut, rubro, descripcion, estadoAprobacion, correo } ] }` | 401, 403 | LISTO |
+| `PATCH /admin/empresas/:id/aprobacion` | ADMINISTRADOR | `{ decision }` con `APROBAR` o `RECHAZAR` | 200 `{ empresa: { id, estadoAprobacion } }` | 400; 403; 404; 409 solicitud ya resuelta | LISTO |
 
 Cuentas de prueba (las crea un seed del backend, solo para desarrollo):
 - Administrador: `admin@plataforma.cl` / `Admin1234`

@@ -12,6 +12,7 @@ import {
   ETIQUETA_MODALIDAD,
   ETIQUETA_TIPO,
   formatearFecha,
+  mensajeAprobacionEmpresa,
   varianteEstado,
 } from '../utils/formato'
 
@@ -111,9 +112,10 @@ export default function EmpresaOfertas() {
       </header>
 
       {!cargandoPerfil && perfil && !empresaAprobada && (
-        <Mensaje tipo="info">
-          Tu empresa aún no está aprobada. Podrás publicar ofertas cuando un
-          administrador la apruebe.
+        <Mensaje
+          tipo={perfil.estadoAprobacion === 'RECHAZADA' ? 'error' : 'info'}
+        >
+          {mensajeAprobacionEmpresa(perfil.estadoAprobacion)}
         </Mensaje>
       )}
 

@@ -5,7 +5,11 @@ import Cargando from '../components/Cargando'
 import Icono from '../components/Icono'
 import Mensaje from '../components/Mensaje'
 import { useAuth } from '../context/useAuth'
-import { ETIQUETA_MODALIDAD, ETIQUETA_TIPO } from '../utils/formato'
+import {
+  ETIQUETA_MODALIDAD,
+  ETIQUETA_TIPO,
+  mensajeAprobacionEmpresa,
+} from '../utils/formato'
 
 const FORMULARIO_INICIAL = {
   titulo: '',
@@ -133,11 +137,12 @@ export default function NuevaOferta() {
   }
 
   if (!empresaAprobada) {
+    const rechazada = perfil?.estadoAprobacion === 'RECHAZADA'
+
     return (
       <section className="pagina">
-        <Mensaje tipo="info">
-          Tu empresa aún no está aprobada. No puedes crear ofertas hasta que un
-          administrador la apruebe.
+        <Mensaje tipo={rechazada ? 'error' : 'info'}>
+          {mensajeAprobacionEmpresa(perfil?.estadoAprobacion)}
         </Mensaje>
         <Link to="/empresa/ofertas" className="boton boton--secundario">
           Volver a mis ofertas

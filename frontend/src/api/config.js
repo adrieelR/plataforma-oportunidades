@@ -4,12 +4,12 @@ export const API_URL =
 // Interruptor por endpoint. Los endpoints marcados como PRÓXIMOS en el
 // contrato siguen simulados hasta que el backend los implemente.
 export const usarMock = {
-  login: true,
+  login: false,
   registro: false,
-  registroEmpresa: true,
+  registroEmpresa: false,
   verificar: true,
-  perfil: true,
+  perfil: false,
   ofertas: true,
   postulaciones: true,
-  admin: true,
+  admin: false,
 }
