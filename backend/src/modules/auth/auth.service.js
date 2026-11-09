@@ -97,6 +97,15 @@ const obtenerPerfil = async (usuarioId) => {
           institucion: {select: {nombre:true }},
         },
       },
+      empresa: {
+        select: {
+          razonSocial:true,
+          rut:true,
+          rubro:true,
+          descripcion:true,
+          estadoAprobacion:true,
+        },
+      },
       administrador: {select: { nombre:true }},
     },
   });
