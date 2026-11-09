@@ -26,4 +26,14 @@ const perfil = async (req,res,next) => {
         next(error);
     }
 };
-module.exports = {registroEstudiante, login, perfil};
+
+const registroEmpresa = async (req, res, next) => {
+    try {
+        const usuario = await authService.registrarEmpresa(req.body);
+        res.status(201).json({mensaje: 'Registro exitoso. Tu empresa quedó pendiente de aprobación ', usuario});
+
+    }catch (error) {
+        next(error)
+    }
+}
+module.exports = {registroEstudiante, registroEmpresa, login, perfil};
