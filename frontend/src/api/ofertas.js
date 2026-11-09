@@ -10,12 +10,22 @@ import {
   obtenerOfertaMock,
 } from './mocks'
 
-export async function listarOfertas({ q, tipo } = {}) {
-  if (usarMock.ofertas) {
-    return listarOfertasMock({ q, tipo })
+export async function listarOfertas({
+  q,
+  tipo,
+  modalidad,
+  area,
+  ubicacion,
+  pagina,
+  limite,
+} = {}) {
+  const filtros = { q, tipo, modalidad, area, ubicacion, pagina, limite }
+
+  if (usarMock.busqueda) {
+    return listarOfertasMock(filtros)
   }
 
-  return peticion('/ofertas', { params: { q, tipo } })
+  return peticion('/busqueda/ofertas', { params: filtros })
 }
 
 export async function obtenerOferta(id) {
