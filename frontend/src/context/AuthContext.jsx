@@ -29,6 +29,8 @@ export function AuthProvider({ children }) {
     guardarSesion(respuesta)
     setToken(respuesta.token)
     setUsuario(respuesta.usuario)
+    setPerfil(null)
+    setPerfilCargado(false)
     return respuesta.usuario
   }, [])
 
@@ -43,20 +45,30 @@ export function AuthProvider({ children }) {
       .then((datos) => {
         if (activo) {
           setPerfil(datos.perfil)
+          if (datos.usuario) {
+            setUsuario(datos.usuario)
+          }
           setPerfilCargado(true)
         }
       })
-      .catch(() => {
-        if (activo) {
-          setPerfil(null)
-          setPerfilCargado(true)
+      .catch((fallo) => {
+        if (!activo) {
+          return
         }
+
+        if (fallo?.estado === 401) {
+          logout()
+          return
+        }
+
+        setPerfil(null)
+        setPerfilCargado(true)
       })
 
     return () => {
       activo = false
     }
-  }, [token])
+  }, [token, logout])
 
   useEffect(() => {
     const raiz = document.documentElement

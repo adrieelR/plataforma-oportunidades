@@ -279,14 +279,24 @@ function buscarEmpresaActual() {
     throw new ErrorApi('Tu rol no tiene permiso para esta acción', 403)
   }
 
-  const empresa = EMPRESAS.find(
+  let empresa = EMPRESAS.find(
     (item) =>
       item.usuarioId === usuario.id ||
       normalizarCorreo(item.correo) === normalizarCorreo(usuario.correo),
   )
 
   if (!empresa) {
-    throw new ErrorApi('No se encontró el perfil de la empresa', 404)
+    empresa = {
+      id: siguienteEmpresaId++,
+      usuarioId: usuario.id,
+      razonSocial: usuario.correo,
+      rut: '',
+      rubro: '',
+      descripcion: '',
+      estadoAprobacion: 'APROBADA',
+      correo: usuario.correo,
+    }
+    EMPRESAS.push(empresa)
   }
 
   return empresa
@@ -298,14 +308,23 @@ function buscarEstudianteActual() {
     throw new ErrorApi('Tu rol no tiene permiso para esta acción', 403)
   }
 
-  const estudiante = ESTUDIANTES.find(
+  let estudiante = ESTUDIANTES.find(
     (item) =>
       item.usuarioId === usuario.id ||
       normalizarCorreo(item.correo) === normalizarCorreo(usuario.correo),
   )
 
   if (!estudiante) {
-    throw new ErrorApi('No se encontró el perfil del estudiante', 404)
+    estudiante = {
+      id: siguienteUsuarioId++,
+      usuarioId: usuario.id,
+      nombres: usuario.correo,
+      apellidos: '',
+      carrera: 'No especificada',
+      correo: usuario.correo,
+      institucion: 'INACAP',
+    }
+    ESTUDIANTES.push(estudiante)
   }
 
   return estudiante

@@ -31,6 +31,20 @@ export const ETIQUETA_APROBACION = {
   RECHAZADA: 'Rechazada',
 }
 
+export const MENSAJE_APROBACION_EMPRESA = {
+  PENDIENTE:
+    'Tu solicitud está en revisión. Podrás publicar ofertas cuando el administrador la apruebe.',
+  RECHAZADA:
+    'Tu solicitud fue rechazada por el administrador. No puedes publicar ofertas.',
+}
+
+export function mensajeAprobacionEmpresa(estado) {
+  return (
+    MENSAJE_APROBACION_EMPRESA[estado] ||
+    MENSAJE_APROBACION_EMPRESA.PENDIENTE
+  )
+}
+
 export function formatearFecha(fecha) {
   if (!fecha) {
     return 'Sin fecha'
