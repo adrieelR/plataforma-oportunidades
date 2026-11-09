@@ -23,6 +23,7 @@ module.exports = app; // deja la aplicación disponible para otros archivos
 */
 const authRoutes = require('./modules/auth/auth.routes');
 const manejadorErrores = require('./middlewares/errorHandler');
+const ofertasRoutes = require('./modules/ofertas/ofertas.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
 const express = require('express');
 const cors = require('cors');
@@ -46,6 +47,7 @@ app.get('/api/salud', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/ofertas', ofertasRoutes);
 
 app.use(manejadorErrores);
 

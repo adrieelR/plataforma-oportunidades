@@ -7,7 +7,7 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "test": "jest --runInBand",
-    "test:cov": "jest --runInBand",
+    "test:cov": "jest --coverage --runInBand",
     "seed": "node prisma/seed.js"
 
   },
