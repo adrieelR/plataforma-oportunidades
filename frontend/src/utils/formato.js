@@ -12,10 +12,15 @@ export const ETIQUETA_MODALIDAD = {
 }
 
 export const ETIQUETA_ESTADO_OFERTA = {
+  BORRADOR: 'Borrador',
   PUBLICADA: 'Publicada',
   CERRADA: 'Cerrada',
   VENCIDA: 'Vencida',
+  OCULTA: 'Oculta',
+  ELIMINADA: 'Eliminada',
 }
+
+export const ESTADOS_OFERTA_EDITABLES = ['PUBLICADA', 'BORRADOR']
 
 export const ETIQUETA_ESTADO_POSTULACION = {
   ENVIADA: 'Enviada',
