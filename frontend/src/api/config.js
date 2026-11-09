@@ -1,9 +1,15 @@
 export const API_URL =
   import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 
-// Interruptor por endpoint. El login seguirá simulado hasta que el backend
-// implemente POST /auth/login. El registro ya usa la API real.
+// Interruptor por endpoint. Los endpoints marcados como PRÓXIMOS en el
+// contrato siguen simulados hasta que el backend los implemente.
 export const usarMock = {
   login: true,
   registro: false,
+  registroEmpresa: true,
+  verificar: true,
+  perfil: true,
+  ofertas: true,
+  postulaciones: true,
+  admin: true,
 }

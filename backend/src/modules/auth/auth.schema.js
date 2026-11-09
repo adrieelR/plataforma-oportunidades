@@ -13,4 +13,9 @@ const registroEstudianteSchema = z.object({
     .regex(/[0-9]/, 'La contraseña debe incluir un número'),
 });
 
-module.exports = { registroEstudianteSchema };
+const loginSchema = z.object({
+  correo: z.string().trim().toLowerCase().email('el correo no es válido'),
+  contrasena: z.string().min(1, 'la contraseña es obligatoria'),
+});
+
+module.exports = { registroEstudianteSchema, loginSchema };

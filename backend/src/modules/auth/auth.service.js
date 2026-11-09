@@ -1,7 +1,11 @@
 const bcrypt = require('bcryptjs');
 const prisma = require('../../db/prisma');
+const jwt = require('jsonwebtoken');
+const { tr } = require('zod/v4/locales');
 
 const RONDAS_BCRYPT = 12;
+// hash de relleno para que el tiempo de respuesta sea parecido exista o no el correo
+const HASH_FALSO = bcrypt.hashSync('relleno-no-es-una-contrasena', RONDAS_BCRYPT);
 
 const crearError = (mensaje, estado) =>{
     const error = new Error(mensaje);
@@ -44,6 +48,66 @@ const registrarEstudiante = async ({ nombres, apellidos, carrera, correo, contra
   });
   return usuario
 };
+const iniciarSesion = async ({correo, contrasena}) =>{
+  const usuario = await prisma.usuario.findUnique({where: {correo} });
 
-module.exports = {registrarEstudiante};
+  const hashAcomparar = usuario ? usuario.contrasenaHash : HASH_FALSO;
+  const coincide = await bcrypt.compare(contrasena, hashAcomparar);
+
+  // mismo mensaje si falla el correo o la contraseña (OWASP A07)
+  if (!usuario || !coincide ){
+    throw crearError('Correo o contraseña incorrectos ', 401);
+  }
+  if (usuario.estadoCuenta === 'SUSPENDIDA'){
+    throw crearError('La cuenta está suspendida', 403);
+
+  }
+  
+  const token = jwt.sign(
+    {id: usuario.id, rol: usuario.rol },
+    process.env.JWT_SECRET,
+    {expiresIn: '8h'}
+  );
+
+  return {
+    token,
+    usuario: {
+      id: usuario.id,
+      correo: usuario.correo,
+      rol: usuario.rol,
+      estadoCuenta: usuario.estadoCuenta,
+
+    },
+  };
+};
+
+const obtenerPerfil = async (usuarioId) => {
+  const usuario = await prisma.usuario.findUnique({
+    where: {id: usuarioId},
+    select: {
+      id:true,
+      correo:true,
+      rol:true,
+      estadoCuenta:true,
+      estudiante: {
+        select: {
+          nombres: true,
+          apellidos: true,
+          carrera: true,
+          institucion: {select: {nombre:true }},
+        },
+      },
+      administrador: {select: { nombre:true }},
+    },
+  });
+
+  if (!usuario) {
+    throw crearError('Usuario no encontrado', 400);
+  }
+
+  const {estudiante, empresa, administrador, ...datosUsuario} = usuario;
+  
+  return {usuario: datosUsuario, perfil: estudiante || empresa || administrador};
+};
+module.exports = {registrarEstudiante, iniciarSesion, obtenerPerfil};
 

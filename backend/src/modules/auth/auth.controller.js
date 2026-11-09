@@ -9,4 +9,21 @@ const registroEstudiante = async (req,res, next)=>{
     }
 };
 
-module.exports = {registroEstudiante};
+const login = async (req,res, next) =>{
+    try{
+        const resultado = await authService.iniciarSesion(req.body);
+        res.status(200).json(resultado);
+    }catch (error) {
+        next(error);
+    }
+};
+
+const perfil = async (req,res,next) => {
+    try {
+        const resultado = await authService.obtenerPerfil(req.usuario.id);
+        res.status(200).json(resultado);
+    } catch (error) {
+        next(error);
+    }
+};
+module.exports = {registroEstudiante, login, perfil};
