@@ -21,7 +21,8 @@ app.get('/api/salud', (req, res)=>{
 
 module.exports = app; // deja la aplicación disponible para otros archivos
 */
-
+const authRoutes = require('./modules/auth/auth.routes');
+const manejadorErrores = require('./middlewares/errorHandler');
 
 const express = require('express');
 const cors = require('cors');
@@ -37,12 +38,18 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
+
 app.get('/api/salud', (req, res) => {
   res.json({ estado: 'ok' });
   
 });
 
+app.use('/api/auth', authRoutes)
+
+app.use(manejadorErrores);
+
 module.exports = app;
+
 
 // ruta de prueba del servidor
 app.get('/api/version',(req,res)=>{
