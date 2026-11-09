@@ -25,6 +25,7 @@ const authRoutes = require('./modules/auth/auth.routes');
 const manejadorErrores = require('./middlewares/errorHandler');
 const ofertasRoutes = require('./modules/ofertas/ofertas.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
+const busquedaRoutes = require('./modules/busqueda/busqueda.routes');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -34,6 +35,7 @@ const app = express();
 // agregamos otra constante para el prisma BD
 
 const prisma = require('./db/prisma');
+const { buscar } = require('./modules/busqueda/busqueda.controller');
 
 app.use(helmet());
 app.use(cors());
@@ -48,6 +50,7 @@ app.get('/api/salud', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ofertas', ofertasRoutes);
+app.use('/api/busqueda', busquedaRoutes);
 
 app.use(manejadorErrores);
 
