@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { cerrarOferta, listarMisOfertas } from '../api/ofertas'
+import { cerrarOferta, eliminarOferta, listarMisOfertas } from '../api/ofertas'
 import Cargando from '../components/Cargando'
 import EstadoVacio from '../components/EstadoVacio'
 import Etiqueta from '../components/Etiqueta'
 import Icono from '../components/Icono'
 import Mensaje from '../components/Mensaje'
 import { useAuth } from '../context/useAuth'
+import { confirmarAccion } from '../utils/alertas'
 import {
+  ESTADOS_OFERTA_EDITABLES,
   ETIQUETA_ESTADO_OFERTA,
   ETIQUETA_MODALIDAD,
   ETIQUETA_TIPO,
@@ -24,6 +26,7 @@ export default function EmpresaOfertas() {
   const [error, setError] = useState('')
   const [mensaje, setMensaje] = useState(location.state?.mensaje || '')
   const [cerrandoId, setCerrandoId] = useState(null)
+  const [eliminandoId, setEliminandoId] = useState(null)
 
   useEffect(() => {
     let activo = true
@@ -58,12 +61,42 @@ export default function EmpresaOfertas() {
     0,
   )
 
-  const manejarCierre = async (oferta) => {
-    if (
-      !window.confirm(
-        `¿Cerrar la oferta "${oferta.titulo}"? No volverá a aparecer en la lista pública.`,
+  const manejarEliminacion = async (oferta) => {
+    const confirmado = await confirmarAccion({
+      titulo: '¿Eliminar la oferta?',
+      texto: `"${oferta.titulo}" dejará de estar disponible. Esta acción no se puede deshacer.`,
+      textoConfirmar: 'Eliminar',
+    })
+
+    if (!confirmado) {
+      return
+    }
+
+    setMensaje('')
+    setError('')
+    setEliminandoId(oferta.id)
+
+    try {
+      await eliminarOferta(oferta.id)
+      setOfertas((actuales) =>
+        actuales.filter((item) => item.id !== oferta.id),
       )
-    ) {
+      setMensaje('Oferta eliminada correctamente.')
+    } catch (fallo) {
+      setError(fallo?.mensaje || 'No se pudo eliminar la oferta.')
+    } finally {
+      setEliminandoId(null)
+    }
+  }
+
+  const manejarCierre = async (oferta) => {
+    const confirmado = await confirmarAccion({
+      titulo: '¿Cerrar la oferta?',
+      texto: `"${oferta.titulo}" dejará de aparecer en la lista pública.`,
+      textoConfirmar: 'Cerrar oferta',
+    })
+
+    if (!confirmado) {
       return
     }
 
@@ -220,6 +253,14 @@ export default function EmpresaOfertas() {
                 >
                   Ver postulaciones
                 </Link>
+                {ESTADOS_OFERTA_EDITABLES.includes(oferta.estado) && (
+                  <Link
+                    to={`/empresa/ofertas/${oferta.id}/editar`}
+                    className="boton boton--secundario boton--pequeno"
+                  >
+                    Editar
+                  </Link>
+                )}
                 {oferta.estado === 'PUBLICADA' && (
                   <button
                     type="button"
@@ -232,6 +273,16 @@ export default function EmpresaOfertas() {
                       : 'Cerrar oferta'}
                   </button>
                 )}
+                <button
+                  type="button"
+                  className="boton boton--peligro boton--pequeno"
+                  onClick={() => manejarEliminacion(oferta)}
+                  disabled={eliminandoId === oferta.id}
+                >
+                  {eliminandoId === oferta.id
+                    ? 'Eliminando...'
+                    : 'Eliminar'}
+                </button>
               </div>
             </article>
           ))}

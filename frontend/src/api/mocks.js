@@ -662,7 +662,10 @@ export async function listarOfertasEmpresaMock() {
   await esperar(350)
   const empresa = buscarEmpresaActual()
 
-  const ofertas = OFERTAS.filter((oferta) => oferta.empresaId === empresa.id)
+  const ofertas = OFERTAS.filter(
+    (oferta) =>
+      oferta.empresaId === empresa.id && oferta.estado !== 'ELIMINADA',
+  )
     .sort((a, b) => b.fechaPublicacion.localeCompare(a.fechaPublicacion))
     .map(ofertaDeEmpresa)
 
@@ -683,6 +686,63 @@ export async function cerrarOfertaMock(id) {
   }
 
   oferta.estado = 'CERRADA'
+  return { oferta: { id: oferta.id, estado: oferta.estado } }
+}
+
+export async function editarOfertaMock(id, datos) {
+  await esperar(350)
+  const empresa = buscarEmpresaActual()
+
+  if (empresa.estadoAprobacion !== 'APROBADA') {
+    throw new ErrorApi(
+      'Tu empresa aún no está aprobada para gestionar ofertas',
+      403,
+    )
+  }
+
+  const oferta = OFERTAS.find((item) => item.id === Number(id))
+
+  if (!oferta || oferta.estado === 'ELIMINADA') {
+    throw new ErrorApi('La oferta no existe', 404)
+  }
+
+  if (oferta.empresaId !== empresa.id) {
+    throw new ErrorApi('No tienes permiso sobre esta oferta', 403)
+  }
+
+  if (!['BORRADOR', 'PUBLICADA'].includes(oferta.estado)) {
+    throw new ErrorApi(
+      'No se puede editar una oferta cerrada, vencida u oculta',
+      409,
+    )
+  }
+
+  Object.assign(oferta, datos)
+  return { oferta: ofertaDetalle(oferta) }
+}
+
+export async function eliminarOfertaMock(id) {
+  await esperar(300)
+  const empresa = buscarEmpresaActual()
+
+  if (empresa.estadoAprobacion !== 'APROBADA') {
+    throw new ErrorApi(
+      'Tu empresa aún no está aprobada para gestionar ofertas',
+      403,
+    )
+  }
+
+  const oferta = OFERTAS.find((item) => item.id === Number(id))
+
+  if (!oferta || oferta.estado === 'ELIMINADA') {
+    throw new ErrorApi('La oferta no existe', 404)
+  }
+
+  if (oferta.empresaId !== empresa.id) {
+    throw new ErrorApi('No tienes permiso sobre esta oferta', 403)
+  }
+
+  oferta.estado = 'ELIMINADA'
   return { oferta: { id: oferta.id, estado: oferta.estado } }
 }
 

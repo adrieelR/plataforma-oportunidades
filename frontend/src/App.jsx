@@ -4,6 +4,7 @@ import RutaProtegida from './components/RutaProtegida'
 import { useAuth } from './context/useAuth'
 import AdminEmpresas from './pages/AdminEmpresas'
 import DetalleOferta from './pages/DetalleOferta'
+import EditarOferta from './pages/EditarOferta'
 import EmpresaOfertas from './pages/EmpresaOfertas'
 import InicioPublico from './pages/InicioPublico'
 import Login from './pages/Login'
@@ -80,6 +81,14 @@ export default function App() {
             element={
               <RutaProtegida roles={['EMPRESA']}>
                 <NuevaOferta />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/empresa/ofertas/:id/editar"
+            element={
+              <RutaProtegida roles={['EMPRESA']}>
+                <EditarOferta />
               </RutaProtegida>
             }
           />

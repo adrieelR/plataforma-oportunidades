@@ -10,6 +10,7 @@ export const usarMock = {
   verificar: true,
   perfil: false,
   ofertas: true,
+  ofertasEmpresa: false,
   postulaciones: true,
   admin: false,
 }

@@ -3,6 +3,8 @@ import { usarMock } from './config'
 import {
   cerrarOfertaMock,
   crearOfertaMock,
+  editarOfertaMock,
+  eliminarOfertaMock,
   listarOfertasEmpresaMock,
   listarOfertasMock,
   obtenerOfertaMock,
@@ -25,7 +27,7 @@ export async function obtenerOferta(id) {
 }
 
 export async function crearOferta(datos) {
-  if (usarMock.ofertas) {
+  if (usarMock.ofertasEmpresa) {
     return crearOfertaMock(datos)
   }
 
@@ -33,17 +35,44 @@ export async function crearOferta(datos) {
 }
 
 export async function listarMisOfertas() {
-  if (usarMock.ofertas) {
+  if (usarMock.ofertasEmpresa) {
     return listarOfertasEmpresaMock()
   }
 
-  return peticion('/ofertas/mias')
+  const respuesta = await peticion('/ofertas/mias')
+
+  // El backend entrega el conteo en _count; las pantallas usan totalPostulaciones.
+  return {
+    ofertas: respuesta.ofertas.map(({ _count, ...oferta }) => ({
+      ...oferta,
+      totalPostulaciones: _count?.postulaciones ?? 0,
+    })),
+  }
+}
+
+export async function editarOferta(id, datos) {
+  if (usarMock.ofertasEmpresa) {
+    return editarOfertaMock(id, datos)
+  }
+
+  return peticion(`/ofertas/${id}`, { metodo: 'PATCH', cuerpo: datos })
+}
+
+export async function eliminarOferta(id) {
+  if (usarMock.ofertasEmpresa) {
+    return eliminarOfertaMock(id)
+  }
+
+  return peticion(`/ofertas/${id}`, { metodo: 'DELETE' })
 }
 
 export async function cerrarOferta(id) {
-  if (usarMock.ofertas) {
+  if (usarMock.ofertasEmpresa) {
     return cerrarOfertaMock(id)
   }
 
-  return peticion(`/ofertas/${id}/cerrar`, { metodo: 'PATCH' })
+  return peticion(`/ofertas/${id}/estado`, {
+    metodo: 'PATCH',
+    cuerpo: { estado: 'CERRADA' },
+  })
 }
