@@ -564,29 +564,55 @@ export async function obtenerPerfilMock() {
   }
 }
 
-export async function listarOfertasMock({ q = '', tipo = '' } = {}) {
+export async function listarOfertasMock({
+  q = '',
+  tipo = '',
+  modalidad = '',
+  area = '',
+  ubicacion = '',
+  pagina = 1,
+  limite = 10,
+} = {}) {
   await esperar(350)
   const termino = q.trim().toLowerCase()
+  const areaTermino = area.trim().toLowerCase()
+  const ubicacionTermino = ubicacion.trim().toLowerCase()
 
-  const ofertas = OFERTAS.filter(estaVigente)
+  const filtradas = OFERTAS.filter(estaVigente)
     .filter((oferta) => !tipo || oferta.tipo === tipo)
+    .filter((oferta) => !modalidad || oferta.modalidad === modalidad)
+    .filter(
+      (oferta) =>
+        !areaTermino || oferta.area.toLowerCase().includes(areaTermino),
+    )
+    .filter(
+      (oferta) =>
+        !ubicacionTermino ||
+        oferta.ubicacion.toLowerCase().includes(ubicacionTermino),
+    )
     .filter((oferta) => {
       if (!termino) {
         return true
       }
-      const empresa = empresaDeOferta(oferta)
-      return [
-        oferta.titulo,
-        oferta.descripcion,
-        oferta.area,
-        oferta.ubicacion,
-        empresa?.razonSocial || '',
-      ].some((valor) => valor.toLowerCase().includes(termino))
+      return [oferta.titulo, oferta.descripcion].some((valor) =>
+        valor.toLowerCase().includes(termino),
+      )
     })
     .sort((a, b) => b.fechaPublicacion.localeCompare(a.fechaPublicacion))
+
+  const total = filtradas.length
+  const totalPaginas = Math.max(1, Math.ceil(total / limite))
+  const paginaActual = Math.min(Math.max(Number(pagina) || 1, 1), totalPaginas)
+  const inicio = (paginaActual - 1) * limite
+
+  const ofertas = filtradas
+    .slice(inicio, inicio + limite)
     .map(ofertaPublica)
 
-  return { ofertas }
+  return {
+    ofertas,
+    paginacion: { pagina: paginaActual, limite, total, totalPaginas },
+  }
 }
 
 export async function obtenerOfertaMock(id) {
