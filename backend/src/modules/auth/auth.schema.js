@@ -10,7 +10,7 @@ const contrasenaNuevaSchema = z
   .regex(/[A-Za-z]/, 'La contraseña debe incluir una letra')
   .regex(/[0-9]/, 'La contraseña debe incluir un número');
 
-// ---- RUT chileno: se valida el dígito verificador (módulo 11) ----
+// ---- RUT chileno: se valida el dígito verificador  ----
 const normalizarRut = (rut) => rut.replace(/[.\s]/g, '').toUpperCase();
 
 const rutEsValido = (rut) => {
