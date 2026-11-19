@@ -54,4 +54,46 @@ const postular = async (usuarioId, ofertaId) => {
   }
 };
 
-module.exports = { postular };
+// HU-07: la empresa dueña de la oferta cambia el estado de una postulación
+const cambiarEstado = async (usuarioId, postulacionId, nuevoEstado) => {
+  const empresa = await prisma.empresa.findUnique({ where: { usuarioId } });
+
+  if (!empresa) {
+    throw crearError('No tienes un perfil de empresa', 403);
+  }
+  if (empresa.estadoAprobacion !== 'APROBADA') {
+    throw crearError('Tu empresa aún no está aprobada para gestionar postulaciones', 403);
+  }
+
+  const postulacion = await prisma.postulacion.findUnique({
+    where: { id: postulacionId },
+    include: { oferta: { select: { empresaId: true, estado: true } } },
+  });
+
+  if (!postulacion || postulacion.oferta.estado === 'ELIMINADA') {
+    throw crearError('Postulación no encontrada', 404);
+  }
+  // OWASP A01: solo la empresa dueña de la oferta gestiona sus postulaciones
+  if (postulacion.oferta.empresaId !== empresa.id) {
+    throw crearError('No tienes permiso sobre esta postulación', 403);
+  }
+
+  if (postulacion.estado === 'CANCELADA') {
+    throw crearError('El estudiante canceló esta postulación', 409);
+  }
+  // ACEPTADA y RECHAZADA son decisiones finales
+  if (['ACEPTADA', 'RECHAZADA'].includes(postulacion.estado)) {
+    throw crearError('La postulación ya fue resuelta y no se puede cambiar', 409);
+  }
+  if (postulacion.estado === nuevoEstado) {
+    throw crearError(`La postulación ya está en estado ${nuevoEstado}`, 409);
+  }
+
+  return prisma.postulacion.update({
+    where: { id: postulacionId },
+    data: { estado: nuevoEstado },
+    select: { id: true, ofertaId: true, estudianteId: true, tipo: true, estado: true, fechaPostulacion: true },
+  });
+};
+
+module.exports = { postular, cambiarEstado };

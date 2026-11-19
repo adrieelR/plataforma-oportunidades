@@ -15,5 +15,6 @@ router.get('/mias', ofertasController.listarMias);
 router.patch('/:id', validar(editarOfertaSchema), ofertasController.editar);
 router.patch('/:id/estado', validar(estadoOfertaSchema), ofertasController.cambiarEstado);
 router.delete('/:id', ofertasController.eliminar);
+router.get('/:id/postulaciones', ofertasController.listarPostulaciones);
 
 module.exports = router;
