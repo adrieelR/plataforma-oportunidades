@@ -5,6 +5,7 @@ const prisma = require('../../src/db/prisma');
 
 // Oferta -> Empresa no tiene borrado en cascada, así que las ofertas se borran primero
 const limpiarBase = async () => {
+  await prisma.postulacion.deleteMany();
   await prisma.oferta.deleteMany();
   await prisma.usuario.deleteMany();
   await prisma.institucionEducativa.deleteMany();

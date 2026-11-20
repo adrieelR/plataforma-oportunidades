@@ -12,6 +12,7 @@ const datosEmpresa = {
 };
 
 const limpiarBase = async () => {
+  await prisma.postulacion.deleteMany();
   await prisma.usuario.deleteMany();
   await prisma.institucionEducativa.deleteMany();
 };
