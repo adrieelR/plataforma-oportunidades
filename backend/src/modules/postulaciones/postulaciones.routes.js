@@ -2,14 +2,22 @@ const { Router } = require('express');
 const { autenticar } = require('../../middlewares/auth');
 const { requerirRol } = require('../../middlewares/roles');
 const validar = require('../../middlewares/validate');
-const { crearPostulacionSchema } = require('./postulaciones.schema');
+const { crearPostulacionSchema, cambiarEstadoPostulacionSchema } = require('./postulaciones.schema');
 const postulacionesController = require('./postulaciones.controller');
 
 const router = Router();
 
-// Solo los estudiantes postulan
-router.use(autenticar, requerirRol('ESTUDIANTE'));
+// El rol se exige ruta por ruta porque cada una la usa un rol distinto
+router.post('/', autenticar, requerirRol('ESTUDIANTE'), validar(crearPostulacionSchema), postulacionesController.crear);
 
-router.post('/', validar(crearPostulacionSchema), postulacionesController.crear);
+router.get('/mias', autenticar, requerirRol('ESTUDIANTE'), postulacionesController.listarMias);
+
+router.patch(
+  '/:id/estado',
+  autenticar,
+  requerirRol('EMPRESA'),
+  validar(cambiarEstadoPostulacionSchema),
+  postulacionesController.cambiarEstado,
+);
 
 module.exports = router;

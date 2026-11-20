@@ -3,7 +3,7 @@ const { crearError } = require('../../utils/errores');
 
 // Estados en los que una oferta ya no se puede ver ni postular (la ve solo su empresa o el administrador)
 const ESTADOS_NO_VISIBLES = ['BORRADOR', 'OCULTA', 'ELIMINADA'];
-
+const ESTADOS_POSTULACION = ['ENVIADA', 'PRESELECCIONADA', 'ACEPTADA', 'RECHAZADA', 'CANCELADA'];
 const postular = async (usuarioId, ofertaId) => {
   // 1. Solo un estudiante verificado puede postular (HU-06)
   const estudiante = await prisma.estudiante.findUnique({ where: { usuarioId } });
@@ -54,4 +54,83 @@ const postular = async (usuarioId, ofertaId) => {
   }
 };
 
-module.exports = { postular };
+// HU-07: la empresa dueña de la oferta cambia el estado de una postulación
+const cambiarEstado = async (usuarioId, postulacionId, nuevoEstado) => {
+  const empresa = await prisma.empresa.findUnique({ where: { usuarioId } });
+
+  if (!empresa) {
+    throw crearError('No tienes un perfil de empresa', 403);
+  }
+  if (empresa.estadoAprobacion !== 'APROBADA') {
+    throw crearError('Tu empresa aún no está aprobada para gestionar postulaciones', 403);
+  }
+
+  const postulacion = await prisma.postulacion.findUnique({
+    where: { id: postulacionId },
+    include: { oferta: { select: { empresaId: true, estado: true } } },
+  });
+
+  if (!postulacion || postulacion.oferta.estado === 'ELIMINADA') {
+    throw crearError('Postulación no encontrada', 404);
+  }
+  // OWASP A01: solo la empresa dueña de la oferta gestiona sus postulaciones
+  if (postulacion.oferta.empresaId !== empresa.id) {
+    throw crearError('No tienes permiso sobre esta postulación', 403);
+  }
+
+  if (postulacion.estado === 'CANCELADA') {
+    throw crearError('El estudiante canceló esta postulación', 409);
+  }
+  // ACEPTADA y RECHAZADA son decisiones finales
+  if (['ACEPTADA', 'RECHAZADA'].includes(postulacion.estado)) {
+    throw crearError('La postulación ya fue resuelta y no se puede cambiar', 409);
+  }
+  if (postulacion.estado === nuevoEstado) {
+    throw crearError(`La postulación ya está en estado ${nuevoEstado}`, 409);
+  }
+
+  return prisma.postulacion.update({
+    where: { id: postulacionId },
+    data: { estado: nuevoEstado },
+    select: { id: true, ofertaId: true, estudianteId: true, tipo: true, estado: true, fechaPostulacion: true },
+  });
+};
+
+// HU-12: el estudiante ve todas sus postulaciones con su estado actual
+const listarMisPostulaciones = async (usuarioId, estado) => {
+  const estudiante = await prisma.estudiante.findUnique({ where: { usuarioId } });
+
+  if (!estudiante) {
+    throw crearError('No tienes un perfil de estudiante', 403);
+  }
+  if (estado && !ESTADOS_POSTULACION.includes(estado)) {
+    throw crearError('El estado solicitado no es válido', 400);
+  }
+
+  return prisma.postulacion.findMany({
+    where: { estudianteId: estudiante.id, ...(estado && { estado }) },
+    select: {
+      id: true,
+      tipo: true,
+      estado: true,
+      fechaPostulacion: true,
+      // La oferta se muestra aunque ya esté cerrada, vencida o eliminada; "oferta.estado" lo indica
+      oferta: {
+        select: {
+          id: true,
+          titulo: true,
+          tipo: true,
+          modalidad: true,
+          area: true,
+          ubicacion: true,
+          estado: true,
+          fechaLimite: true,
+          empresa: { select: { id: true, razonSocial: true } },
+        },
+      },
+    },
+    orderBy: [{ fechaPostulacion: 'desc' }, { id: 'desc' }],
+  });
+};
+
+module.exports = { postular, cambiarEstado, listarMisPostulaciones };

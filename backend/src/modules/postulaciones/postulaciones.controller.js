@@ -8,5 +8,30 @@ const crear = async (req, res, next) => {
     next(error);
   }
 };
+const cambiarEstado = async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
 
-module.exports = { crear };
+    if (!Number.isInteger(id) || id < 1) {
+      return res.status(400).json({ mensaje: 'El identificador no es válido' });
+    }
+
+    const postulacion = await postulacionesService.cambiarEstado(req.usuario.id, id, req.body.estado);
+    res.status(200).json({ postulacion });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+const listarMias = async (req, res, next) => {
+  try {
+    const postulaciones = await postulacionesService.listarMisPostulaciones(req.usuario.id, req.query.estado);
+    res.status(200).json({ postulaciones });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+module.exports = { crear, cambiarEstado, listarMias };
