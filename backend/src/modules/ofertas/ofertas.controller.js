@@ -64,4 +64,16 @@ const eliminar = async (req, res, next) => {
   }
 };
 
-module.exports = { crear, listarMias, editar, cambiarEstado, eliminar };
+const listarPostulaciones = async (req, res, next) => {
+  try {
+    const id = leerId(req, res);
+    if (id === null) return;
+
+    const postulaciones = await ofertasService.listarPostulaciones(req.usuario.id, id, req.query.estado);
+    res.status(200).json({ postulaciones });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { crear, listarMias, editar, cambiarEstado, eliminar, listarPostulaciones };

@@ -4,6 +4,7 @@ const app = require('../../src/app');
 const prisma = require('../../src/db/prisma');
 
 const limpiarBase = async () => {
+  await prisma.postulacion.deleteMany();
   await prisma.usuario.deleteMany();
   await prisma.institucionEducativa.deleteMany();
 };

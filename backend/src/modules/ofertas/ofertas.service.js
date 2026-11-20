@@ -2,6 +2,7 @@ const prisma = require('../../db/prisma');
 const { crearError } = require('../../utils/errores');
 
 const ESTADOS_LISTABLES = ['BORRADOR', 'PUBLICADA', 'CERRADA', 'VENCIDA', 'OCULTA'];
+const ESTADOS_POSTULACION = ['ENVIADA', 'PRESELECCIONADA', 'ACEPTADA', 'RECHAZADA', 'CANCELADA'];
 
 // Devuelve la empresa del usuario autenticado
 const obtenerEmpresa = async (usuarioId) => {
@@ -112,4 +113,43 @@ const eliminarOferta = async (usuarioId, ofertaId) => {
   });
 };
 
-module.exports = { crearOferta, listarMisOfertas, editarOferta, cambiarEstado, eliminarOferta };
+// HU-07: la empresa dueña ve las postulaciones recibidas por una de sus ofertas
+const listarPostulaciones = async (usuarioId, ofertaId, estado) => {
+  const empresa = await obtenerEmpresaAprobada(usuarioId);
+  await obtenerOfertaPropia(empresa.id, ofertaId);
+
+  if (estado && !ESTADOS_POSTULACION.includes(estado)) {
+    throw crearError('El estado solicitado no es válido', 400);
+  }
+
+  return prisma.postulacion.findMany({
+    where: { ofertaId, ...(estado && { estado }) },
+    select: {
+      id: true,
+      tipo: true,
+      estado: true,
+      fechaPostulacion: true,
+      // Datos del perfil del estudiante; nunca su correo ni su contraseña
+      estudiante: {
+        select: {
+          id: true,
+          nombres: true,
+          apellidos: true,
+          carrera: true,
+          descripcionPerfil: true,
+          institucion: { select: { nombre: true } },
+        },
+      },
+    },
+    orderBy: [{ fechaPostulacion: 'desc' }, { id: 'desc' }],
+  });
+};
+
+module.exports = {
+  crearOferta,
+  listarMisOfertas,
+  editarOferta,
+  cambiarEstado,
+  eliminarOferta,
+  listarPostulaciones,
+};
