@@ -88,12 +88,13 @@ export default function DetalleOferta() {
     setPostulando(true)
 
     try {
-      await crearPostulacion(oferta.id)
+      const respuesta = await crearPostulacion(oferta.id)
       setYaPostulo(true)
       setMensajeExito(
-        oferta.tipo === 'CAPACITACION'
-          ? 'Inscripción realizada correctamente.'
-          : 'Postulación enviada correctamente.',
+        respuesta?.mensaje ||
+          (oferta.tipo === 'CAPACITACION'
+            ? 'Inscripción realizada correctamente.'
+            : 'Postulación enviada correctamente.'),
       )
     } catch (fallo) {
       setErrorPostulacion(

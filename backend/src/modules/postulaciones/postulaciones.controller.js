@@ -23,4 +23,15 @@ const cambiarEstado = async (req, res, next) => {
   }
 };
 
-module.exports = { crear, cambiarEstado };
+
+const listarMias = async (req, res, next) => {
+  try {
+    const postulaciones = await postulacionesService.listarMisPostulaciones(req.usuario.id, req.query.estado);
+    res.status(200).json({ postulaciones });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+module.exports = { crear, cambiarEstado, listarMias };

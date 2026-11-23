@@ -30,6 +30,11 @@ export const ETIQUETA_ESTADO_POSTULACION = {
   CANCELADA: 'Cancelada',
 }
 
+export const ETIQUETA_TIPO_POSTULACION = {
+  POSTULACION: 'Postulación',
+  INSCRIPCION: 'Inscripción',
+}
+
 export const ETIQUETA_APROBACION = {
   PENDIENTE: 'Pendiente',
   APROBADA: 'Aprobada',

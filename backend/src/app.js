@@ -22,11 +22,13 @@ app.get('/api/salud', (req, res)=>{
 module.exports = app; // deja la aplicación disponible para otros archivos
 */
 const authRoutes = require('./modules/auth/auth.routes');
+const mensajeRoutes = require('./modules/mensajes/mensajes.routes')
 const manejadorErrores = require('./middlewares/errorHandler');
 const ofertasRoutes = require('./modules/ofertas/ofertas.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
 const busquedaRoutes = require('./modules/busqueda/busqueda.routes');
 const postulacionesRoutes = require('./modules/postulaciones/postulaciones.routes');
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -53,7 +55,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/ofertas', ofertasRoutes);
 app.use('/api/busqueda', busquedaRoutes);
 app.use('/api/postulaciones', postulacionesRoutes);
-
+app.use('/api/mensajes', mensajeRoutes);
 app.use(manejadorErrores);
 
 module.exports = app;

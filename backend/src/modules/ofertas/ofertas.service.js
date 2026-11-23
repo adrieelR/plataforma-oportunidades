@@ -113,7 +113,6 @@ const eliminarOferta = async (usuarioId, ofertaId) => {
   });
 };
 
-
 // HU-07: la empresa dueña ve las postulaciones recibidas por una de sus ofertas
 const listarPostulaciones = async (usuarioId, ofertaId, estado) => {
   const empresa = await obtenerEmpresaAprobada(usuarioId);
