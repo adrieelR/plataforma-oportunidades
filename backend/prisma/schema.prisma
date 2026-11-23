@@ -117,6 +117,7 @@ model Usuario {
   mensajesEnviados  Mensaje[]           @relation("MensajesEnviados")
   mensajesRecibidos Mensaje[]           @relation("MensajesRecibidos")
   reportes          Reporte[]
+  suspensiones      SuspensionCuenta[]
 }
 
 model Estudiante {
@@ -155,6 +156,7 @@ model Administrador {
 
   usuario      Usuario      @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   moderaciones Moderacion[]
+  suspensionesAplicadas SuspensionCuenta[]
 }
 
 model InstitucionEducativa {
@@ -288,4 +290,15 @@ model Moderacion {
   oferta        Oferta        @relation(fields: [ofertaId], references: [id])
   administrador Administrador @relation(fields: [administradorId], references: [id])
   reporte       Reporte?      @relation(fields: [reporteId], references: [id])
+}
+
+model SuspensionCuenta {
+  id              Int      @id @default(autoincrement())
+  usuarioId       Int
+  administradorId Int
+  motivo          String
+  fechaSuspension DateTime @default(now())
+
+  usuario       Usuario       @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  administrador Administrador @relation(fields: [administradorId], references: [id], onDelete: Cascade)
 }
