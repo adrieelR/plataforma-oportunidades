@@ -12,6 +12,9 @@ export const usarMock = {
   ofertas: true,
   ofertasEmpresa: false,
   busqueda: false,
-  postulaciones: true,
+  postular: false,
+  misPostulaciones: false,
+  postulacionesDeOferta: false,
+  cambiarEstadoPostulacion: false,
   admin: false,
 }

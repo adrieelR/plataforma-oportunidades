@@ -8,31 +8,38 @@ import {
 } from './mocks'
 
 export async function crearPostulacion(ofertaId) {
-  if (usarMock.postulaciones) {
+  if (usarMock.postular) {
     return crearPostulacionMock(ofertaId)
   }
 
-  return peticion(`/ofertas/${ofertaId}/postulaciones`, { metodo: 'POST' })
+  return peticion('/postulaciones', {
+    metodo: 'POST',
+    cuerpo: { ofertaId: Number(ofertaId) },
+  })
 }
 
-export async function listarMisPostulaciones() {
-  if (usarMock.postulaciones) {
+export async function listarMisPostulaciones(estado) {
+  if (usarMock.misPostulaciones) {
     return listarMisPostulacionesMock()
   }
 
-  return peticion('/postulaciones/mias')
+  return peticion('/postulaciones/mias', {
+    params: { estado },
+  })
 }
 
-export async function listarPostulacionesDeOferta(ofertaId) {
-  if (usarMock.postulaciones) {
+export async function listarPostulacionesDeOferta(ofertaId, estado) {
+  if (usarMock.postulacionesDeOferta) {
     return listarPostulacionesDeOfertaMock(ofertaId)
   }
 
-  return peticion(`/ofertas/${ofertaId}/postulaciones`)
+  return peticion(`/ofertas/${ofertaId}/postulaciones`, {
+    params: { estado },
+  })
 }
 
 export async function cambiarEstadoPostulacion(id, estado) {
-  if (usarMock.postulaciones) {
+  if (usarMock.cambiarEstadoPostulacion) {
     return cambiarEstadoPostulacionMock(id, estado)
   }
 
