@@ -11,19 +11,41 @@ import EstadoVacio from '../components/EstadoVacio'
 import Etiqueta from '../components/Etiqueta'
 import Icono from '../components/Icono'
 import Mensaje from '../components/Mensaje'
+import { confirmarAccion } from '../utils/alertas'
 import {
   ETIQUETA_ESTADO_OFERTA,
   ETIQUETA_ESTADO_POSTULACION,
+  ETIQUETA_TIPO_POSTULACION,
   formatearFechaHora,
   varianteEstado,
 } from '../utils/formato'
+
+const ACCIONES_POR_ESTADO = {
+  ENVIADA: [
+    {
+      estado: 'PRESELECCIONADA',
+      texto: 'Preseleccionar',
+      clase: 'boton--secundario',
+    },
+    { estado: 'ACEPTADA', texto: 'Aceptar', clase: 'boton--primario' },
+    { estado: 'RECHAZADA', texto: 'Rechazar', clase: 'boton--peligro' },
+  ],
+  PRESELECCIONADA: [
+    { estado: 'ACEPTADA', texto: 'Aceptar', clase: 'boton--primario' },
+    { estado: 'RECHAZADA', texto: 'Rechazar', clase: 'boton--peligro' },
+  ],
+}
+
+const ACCIONES_CON_CONFIRMACION = ['ACEPTADA', 'RECHAZADA']
 
 export default function PostulacionesDeOferta() {
   const { id } = useParams()
   const [oferta, setOferta] = useState(null)
   const [postulaciones, setPostulaciones] = useState([])
+  const [estadoFiltro, setEstadoFiltro] = useState('')
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
+  const [errorOferta, setErrorOferta] = useState('')
   const [mensaje, setMensaje] = useState('')
   const [errorAccion, setErrorAccion] = useState('')
   const [actualizandoId, setActualizandoId] = useState(null)
@@ -31,11 +53,31 @@ export default function PostulacionesDeOferta() {
   useEffect(() => {
     let activo = true
 
-    Promise.all([obtenerOferta(id), listarPostulacionesDeOferta(id)])
-      .then(([respuestaOferta, respuestaPostulaciones]) => {
+    obtenerOferta(id)
+      .then((respuesta) => {
         if (activo) {
-          setOferta(respuestaOferta.oferta)
-          setPostulaciones(respuestaPostulaciones.postulaciones)
+          setOferta(respuesta.oferta)
+          setErrorOferta('')
+        }
+      })
+      .catch((fallo) => {
+        if (activo) {
+          setErrorOferta(fallo?.mensaje || 'No se pudo cargar la oferta.')
+        }
+      })
+
+    return () => {
+      activo = false
+    }
+  }, [id])
+
+  useEffect(() => {
+    let activo = true
+
+    listarPostulacionesDeOferta(id, estadoFiltro || undefined)
+      .then((respuesta) => {
+        if (activo) {
+          setPostulaciones(respuesta.postulaciones)
         }
       })
       .catch((fallo) => {
@@ -54,11 +96,24 @@ export default function PostulacionesDeOferta() {
     return () => {
       activo = false
     }
-  }, [id])
+  }, [id, estadoFiltro])
 
   const cambiarEstado = async (postulacion, nuevoEstado) => {
-    if (nuevoEstado === postulacion.estado) {
-      return
+    const nombre = `${postulacion.estudiante.nombres} ${postulacion.estudiante.apellidos}`
+
+    if (ACCIONES_CON_CONFIRMACION.includes(nuevoEstado)) {
+      const confirmado = await confirmarAccion({
+        titulo:
+          nuevoEstado === 'ACEPTADA'
+            ? '¿Aceptar esta postulación?'
+            : '¿Rechazar esta postulación?',
+        texto: `La decisión sobre la postulación de ${nombre} no se puede deshacer.`,
+        textoConfirmar: nuevoEstado === 'ACEPTADA' ? 'Aceptar' : 'Rechazar',
+      })
+
+      if (!confirmado) {
+        return
+      }
     }
 
     setMensaje('')
@@ -107,9 +162,34 @@ export default function PostulacionesDeOferta() {
         )}
       </header>
 
+      <div className="campo candidatos__filtro">
+        <label htmlFor="filtro-estado-postulacion">Filtrar por estado</label>
+        <select
+          id="filtro-estado-postulacion"
+          value={estadoFiltro}
+          onChange={(evento) => {
+            setCargando(true)
+            setError('')
+            setErrorAccion('')
+            setEstadoFiltro(evento.target.value)
+          }}
+        >
+          <option value="">Todos los estados</option>
+          {Object.entries(ETIQUETA_ESTADO_POSTULACION).map(
+            ([valor, texto]) => (
+              <option key={valor} value={valor}>
+                {texto}
+              </option>
+            ),
+          )}
+        </select>
+      </div>
+
       {mensaje && <Mensaje tipo="exito">{mensaje}</Mensaje>}
-      {(error || errorAccion) && (
-        <Mensaje tipo="error">{error || errorAccion}</Mensaje>
+      {(errorOferta || error || errorAccion) && (
+        <Mensaje tipo="error">
+          {errorOferta || error || errorAccion}
+        </Mensaje>
       )}
 
       {cargando && (
@@ -120,15 +200,19 @@ export default function PostulacionesDeOferta() {
 
       {!cargando && !error && postulaciones.length === 0 && (
         <EstadoVacio>
-          Esta oferta todavía no tiene postulaciones.
+          {estadoFiltro
+            ? 'No hay postulaciones con el estado seleccionado.'
+            : 'Esta oferta todavía no tiene postulaciones.'}
         </EstadoVacio>
       )}
 
       {!cargando && !error && postulaciones.length > 0 && (
         <div className="lista-candidatos">
           {postulaciones.map((postulacion) => {
-            const nombre = `${postulacion.estudiante.nombres} ${postulacion.estudiante.apellidos}`
-            const idSelect = `estado-postulacion-${postulacion.id}`
+            const estudiante = postulacion.estudiante
+            const nombre = `${estudiante.nombres} ${estudiante.apellidos}`
+            const acciones = ACCIONES_POR_ESTADO[postulacion.estado] || []
+            const enviando = actualizandoId === postulacion.id
 
             return (
               <article className="candidato panel" key={postulacion.id}>
@@ -136,43 +220,56 @@ export default function PostulacionesDeOferta() {
                   <Avatar nombre={nombre} persona tamano="md" />
                   <div className="candidato__identidad">
                     <h2>{nombre}</h2>
-                    <p>{postulacion.estudiante.carrera}</p>
+                    <p>{estudiante.carrera}</p>
                   </div>
-                  <Etiqueta variante={varianteEstado(postulacion.estado)}>
-                    {ETIQUETA_ESTADO_POSTULACION[postulacion.estado] ||
-                      postulacion.estado}
-                  </Etiqueta>
+                  <div className="candidato__etiquetas">
+                    <Etiqueta variante="tipo">
+                      {ETIQUETA_TIPO_POSTULACION[postulacion.tipo] ||
+                        postulacion.tipo}
+                    </Etiqueta>
+                    <Etiqueta variante={varianteEstado(postulacion.estado)}>
+                      {ETIQUETA_ESTADO_POSTULACION[postulacion.estado] ||
+                        postulacion.estado}
+                    </Etiqueta>
+                  </div>
                 </div>
 
                 <ul className="candidato__datos">
-                  <li>
-                    <Icono nombre="correo" tamano={15} />
-                    {postulacion.estudiante.correo}
-                  </li>
+                  {estudiante.institucion?.nombre && (
+                    <li>
+                      <Icono nombre="empresa" tamano={15} />
+                      {estudiante.institucion.nombre}
+                    </li>
+                  )}
+                  {estudiante.descripcionPerfil && (
+                    <li>
+                      <Icono nombre="documento" tamano={15} />
+                      {estudiante.descripcionPerfil}
+                    </li>
+                  )}
                   <li>
                     <Icono nombre="calendario" tamano={15} />
                     {formatearFechaHora(postulacion.fechaPostulacion)}
                   </li>
                 </ul>
 
-                <div className="candidato__acciones">
-                  <label htmlFor={idSelect}>Cambiar estado</label>
-                  <select
-                    id={idSelect}
-                    value={postulacion.estado}
-                    onChange={(evento) =>
-                      cambiarEstado(postulacion, evento.target.value)
-                    }
-                    disabled={actualizandoId === postulacion.id}
-                  >
-                    <option value="ENVIADA" disabled>
-                      Enviada
-                    </option>
-                    <option value="PRESELECCIONADA">Preseleccionada</option>
-                    <option value="ACEPTADA">Aceptada</option>
-                    <option value="RECHAZADA">Rechazada</option>
-                  </select>
-                </div>
+                {acciones.length > 0 && (
+                  <div className="candidato__acciones candidato__acciones--botones">
+                    {acciones.map((accion) => (
+                      <button
+                        key={accion.estado}
+                        type="button"
+                        className={`boton boton--pequeno ${accion.clase}`}
+                        onClick={() =>
+                          cambiarEstado(postulacion, accion.estado)
+                        }
+                        disabled={enviando}
+                      >
+                        {accion.texto}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </article>
             )
           })}

@@ -462,8 +462,7 @@ textarea {
 
 .etiqueta--cerrada,
 .etiqueta--vencida,
-.etiqueta--rechazada,
-.etiqueta--cancelada {
+.etiqueta--rechazada {
   color: var(--color-error);
   background-color: var(--color-error-fondo);
 }
@@ -1160,6 +1159,20 @@ textarea {
   font-size: 0.86rem;
 }
 
+.candidatos__filtro,
+.postulaciones__filtro {
+  max-width: 280px;
+  margin-bottom: 1rem;
+}
+
+.candidato__etiquetas,
+.postulacion__etiquetas {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
 .lista-candidatos {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -1236,6 +1249,11 @@ textarea {
   border-radius: 8px;
   font: inherit;
   font-size: 0.85rem;
+}
+
+.candidato__acciones--botones {
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .lista-empresas {
