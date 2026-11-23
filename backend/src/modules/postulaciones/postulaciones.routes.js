@@ -10,6 +10,8 @@ const router = Router();
 // El rol se exige ruta por ruta porque cada una la usa un rol distinto
 router.post('/', autenticar, requerirRol('ESTUDIANTE'), validar(crearPostulacionSchema), postulacionesController.crear);
 
+router.get('/mias', autenticar, requerirRol('ESTUDIANTE'), postulacionesController.listarMias);
+
 router.patch(
   '/:id/estado',
   autenticar,
