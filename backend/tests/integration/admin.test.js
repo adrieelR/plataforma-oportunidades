@@ -90,6 +90,12 @@ describe('Rutas de administración', () => {
 
     const empresa = await prisma.empresa.findUnique({ where: { id: idEmpresa1 } });
     expect(empresa.fechaAprobacion).not.toBeNull();
+
+    const notificacion = await prisma.notificacion.findFirst({
+      where: { tipo: 'APROBACION_EMPRESA', usuario: { empresa: { id: idEmpresa1 } } },
+    });
+
+    expect(notificacion.estadoEnvio).toBe('ENVIADA');
   });
 
   test('el administrador rechaza una empresa', async () => {

@@ -125,7 +125,7 @@ const listarMisPostulaciones = async (usuarioId, estado) => {
           ubicacion: true,
           estado: true,
           fechaLimite: true,
-          empresa: { select: { id: true, razonSocial: true } },
+          empresa: { select: { id: true, usuarioId:true, razonSocial: true, } },
         },
       },
     },

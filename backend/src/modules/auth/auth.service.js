@@ -2,6 +2,10 @@ const bcrypt = require('bcryptjs');
 const prisma = require('../../db/prisma');
 const jwt = require('jsonwebtoken');
 const { tr } = require('zod/v4/locales');
+const {
+  notificarRegistroEstudiante,
+  notificarRegistroEmpresa,
+} = require('../notificaciones/notificaciones.service');
 
 const RONDAS_BCRYPT = 12;
 // hash de relleno para que el tiempo de respuesta sea parecido exista o no el correo
@@ -46,6 +50,7 @@ const registrarEstudiante = async ({ nombres, apellidos, carrera, correo, contra
     },
     select: {id:true, correo:true, rol:true, estadoCuenta:true},
   });
+  await notificarRegistroEstudiante({ usuarioId: usuario.id, nombre: nombres });
   return usuario
 };
 const iniciarSesion = async ({correo, contrasena}) =>{
@@ -147,7 +152,7 @@ const registrarEmpresa = async ({ razonSocial, rut, rubro, descripcion, correo, 
     },
     select: { id: true, correo: true, rol: true, estadoCuenta: true },
   });
-
+  await notificarRegistroEmpresa({ usuarioId: usuario.id, razonSocial });
   return usuario;
 };
 module.exports = {registrarEstudiante, registrarEmpresa, iniciarSesion, obtenerPerfil};

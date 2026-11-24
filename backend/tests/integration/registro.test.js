@@ -30,6 +30,12 @@ afterAll(async () => {
 describe('POST /api/auth/registro', () => {
   test('registra a un estudiante con datos válidos', async () => {
     const respuesta = await request(app).post('/api/auth/registro').send(datosValidos);
+    const notificacion = await prisma.notificacion.findFirst({
+      where: { usuario: { correo: 'ana.perez@inacapmail.cl' } },
+    });
+
+    expect(notificacion.tipo).toBe('CONFIRMACION_REGISTRO');
+    expect(notificacion.estadoEnvio).toBe('ENVIADA');
 
     expect(respuesta.statusCode).toBe(201);
     expect(respuesta.body.usuario.correo).toBe('ana.perez@inacapmail.cl');

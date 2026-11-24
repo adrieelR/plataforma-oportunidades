@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "TipoNotificacion" ADD VALUE 'CONFIRMACION_REGISTRO';

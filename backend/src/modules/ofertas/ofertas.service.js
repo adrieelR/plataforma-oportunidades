@@ -133,6 +133,7 @@ const listarPostulaciones = async (usuarioId, ofertaId, estado) => {
       estudiante: {
         select: {
           id: true,
+          usuarioId:true,
           nombres: true,
           apellidos: true,
           carrera: true,

@@ -1,6 +1,6 @@
 const prisma = require('../../db/prisma');
 const { crearError } = require('../../utils/errores');
-
+const { notificarResultadoEmpresa } = require('../notificaciones/notificaciones.service');
 const ESTADOS = ['PENDIENTE', 'APROBADA', 'RECHAZADA'];
 
 const listarEmpresas = async (estado) => {
@@ -40,7 +40,7 @@ const resolverAprobacion = async (empresaId, decision) => {
 
   const aprobada = decision === 'APROBAR';
 
-  return prisma.empresa.update({
+  const actualizada = await prisma.empresa.update({
     where: { id: empresaId },
     data: {
       estadoAprobacion: aprobada ? 'APROBADA' : 'RECHAZADA',
@@ -48,6 +48,17 @@ const resolverAprobacion = async (empresaId, decision) => {
     },
     select: { id: true, estadoAprobacion: true },
   });
+
+  await notificarResultadoEmpresa({
+    usuarioId: empresa.usuarioId,
+    razonSocial: empresa.razonSocial,
+    aprobada,
+  });
+
+  return actualizada;
+  
+
+  
 };
 
 module.exports = { listarEmpresas, resolverAprobacion };
