@@ -23,6 +23,7 @@ module.exports = app; // deja la aplicación disponible para otros archivos
 */
 const authRoutes = require('./modules/auth/auth.routes');
 const mensajeRoutes = require('./modules/mensajes/mensajes.routes')
+const reportesRoutes = require('./modules/reportes/reportes.routes');
 const manejadorErrores = require('./middlewares/errorHandler');
 const ofertasRoutes = require('./modules/ofertas/ofertas.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
@@ -56,6 +57,7 @@ app.use('/api/ofertas', ofertasRoutes);
 app.use('/api/busqueda', busquedaRoutes);
 app.use('/api/postulaciones', postulacionesRoutes);
 app.use('/api/mensajes', mensajeRoutes);
+app.use('/api/reportes', reportesRoutes);
 app.use(manejadorErrores);
 
 module.exports = app;
