@@ -80,14 +80,17 @@ export function AuthProvider({ children }) {
   }, [usuario])
 
   useEffect(() => {
-    const manejarSesionExpirada = () => {
+    const manejarSesionExpirada = (evento) => {
       setToken(null)
       setUsuario(null)
       setPerfil(null)
       setPerfilCargado(false)
       navigate('/login', {
         replace: true,
-        state: { sesionExpirada: true },
+        state: {
+          sesionExpirada: true,
+          mensajeSesion: evento?.detail?.mensaje,
+        },
       })
     }
 

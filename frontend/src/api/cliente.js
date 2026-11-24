@@ -3,6 +3,8 @@ import { API_URL } from './config'
 export const CLAVE_TOKEN = 'plataforma_token'
 export const CLAVE_USUARIO = 'plataforma_usuario'
 
+const MENSAJE_CUENTA_SUSPENDIDA = 'La cuenta está suspendida'
+
 export class ErrorApi extends Error {
   constructor(mensaje, estado, errores = []) {
     super(mensaje)
@@ -104,9 +106,20 @@ export async function peticion(
   const datos = await leerCuerpo(respuesta)
 
   if (!respuesta.ok) {
-    if (respuesta.status === 401 && token && !noExpirarSesion) {
-      borrarSesion()
-      window.dispatchEvent(new CustomEvent('sesion-expirada'))
+    if (token && !noExpirarSesion) {
+      const sesionExpirada = respuesta.status === 401
+      const cuentaSuspendida =
+        respuesta.status === 403 &&
+        datos?.mensaje === MENSAJE_CUENTA_SUSPENDIDA
+
+      if (sesionExpirada || cuentaSuspendida) {
+        borrarSesion()
+        window.dispatchEvent(
+          new CustomEvent('sesion-expirada', {
+            detail: cuentaSuspendida ? { mensaje: datos.mensaje } : undefined,
+          }),
+        )
+      }
     }
 
     throw new ErrorApi(

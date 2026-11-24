@@ -20,3 +20,27 @@ export async function decidirEmpresa(id, decision) {
     cuerpo: { decision },
   })
 }
+
+export async function listarOfertasAdmin({ estado } = {}) {
+  return peticion('/admin/ofertas', { params: { estado } })
+}
+
+export async function moderarOferta(id, { decision, motivo }) {
+  return peticion(`/admin/ofertas/${id}/moderacion`, {
+    metodo: 'PATCH',
+    cuerpo: { decision, motivo },
+  })
+}
+
+export async function listarUsuariosAdmin({ rol, estadoCuenta } = {}) {
+  return peticion('/admin/usuarios', {
+    params: { rol, estadoCuenta },
+  })
+}
+
+export async function suspenderCuenta(id, motivo) {
+  return peticion(`/admin/usuarios/${id}/suspension`, {
+    metodo: 'PATCH',
+    cuerpo: { motivo },
+  })
+}

@@ -98,7 +98,8 @@ export default function Login() {
     >
       {location.state?.sesionExpirada && !errorGeneral && (
         <Mensaje tipo="info">
-          Tu sesión expiró. Vuelve a iniciar sesión.
+          {location.state?.mensajeSesion ||
+            'Tu sesión expiró. Vuelve a iniciar sesión.'}
         </Mensaje>
       )}
 
