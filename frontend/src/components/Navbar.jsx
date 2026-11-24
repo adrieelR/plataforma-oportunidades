@@ -10,13 +10,16 @@ const ENLACES_POR_ROL = {
   ESTUDIANTE: [
     { to: '/ofertas', texto: 'Ofertas', icono: 'maletin' },
     { to: '/mis-postulaciones', texto: 'Mis postulaciones', icono: 'documento' },
+    { to: '/mensajes', texto: 'Mensajes', icono: 'correo' },
   ],
   EMPRESA: [
     { to: '/empresa/ofertas', texto: 'Mis ofertas', icono: 'empresa' },
     { to: '/empresa/ofertas/nueva', texto: 'Nueva oferta', icono: 'mas' },
+    { to: '/mensajes', texto: 'Mensajes', icono: 'correo' },
   ],
   ADMINISTRADOR: [
     { to: '/admin/empresas', texto: 'Empresas', icono: 'escudo' },
+    { to: '/admin/moderacion', texto: 'Moderación', icono: 'documento' },
   ],
 }
 

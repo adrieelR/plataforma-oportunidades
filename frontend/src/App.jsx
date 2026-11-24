@@ -3,11 +3,14 @@ import Navbar from './components/Navbar'
 import RutaProtegida from './components/RutaProtegida'
 import { useAuth } from './context/useAuth'
 import AdminEmpresas from './pages/AdminEmpresas'
+import AdminModeracion from './pages/AdminModeracion'
+import Conversacion from './pages/Conversacion'
 import DetalleOferta from './pages/DetalleOferta'
 import EditarOferta from './pages/EditarOferta'
 import EmpresaOfertas from './pages/EmpresaOfertas'
 import InicioPublico from './pages/InicioPublico'
 import Login from './pages/Login'
+import Mensajes from './pages/Mensajes'
 import MisPostulaciones from './pages/MisPostulaciones'
 import NoEncontrada from './pages/NoEncontrada'
 import NuevaOferta from './pages/NuevaOferta'
@@ -67,6 +70,22 @@ export default function App() {
               </RutaProtegida>
             }
           />
+          <Route
+            path="/mensajes"
+            element={
+              <RutaProtegida roles={['ESTUDIANTE', 'EMPRESA']}>
+                <Mensajes />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/mensajes/:ofertaId/:contactoId"
+            element={
+              <RutaProtegida roles={['ESTUDIANTE', 'EMPRESA']}>
+                <Conversacion />
+              </RutaProtegida>
+            }
+          />
 
           <Route
             path="/empresa/ofertas"
@@ -106,6 +125,14 @@ export default function App() {
             element={
               <RutaProtegida roles={['ADMINISTRADOR']}>
                 <AdminEmpresas />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/admin/moderacion"
+            element={
+              <RutaProtegida roles={['ADMINISTRADOR']}>
+                <AdminModeracion />
               </RutaProtegida>
             }
           />

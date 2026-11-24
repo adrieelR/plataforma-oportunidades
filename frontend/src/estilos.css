@@ -1330,6 +1330,286 @@ textarea {
   margin-top: auto;
 }
 
+.postulacion__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+
+.pestanas {
+  display: flex;
+  gap: 0.25rem;
+  width: fit-content;
+  margin-bottom: 1rem;
+  padding: 0.3rem;
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 999px;
+}
+
+.pestana {
+  padding: 0.55rem 1rem;
+  color: var(--color-texto-suave);
+  background-color: transparent;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pestana:hover {
+  color: var(--color-primario);
+}
+
+.pestana--activa {
+  color: var(--color-primario);
+  background-color: var(--color-primario-suave);
+}
+
+.pestana:focus-visible {
+  outline: 2px solid var(--color-primario);
+  outline-offset: 2px;
+}
+
+.moderacion__filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.moderacion__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.moderacion-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.moderacion-item__cabecera {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+
+.moderacion-item__identidad {
+  flex: 1;
+  min-width: 0;
+}
+
+.moderacion-item__identidad h2 {
+  margin: 0 0 0.2rem;
+  font-size: 1.02rem;
+  overflow-wrap: anywhere;
+}
+
+.moderacion-item__identidad p {
+  margin: 0;
+  color: var(--color-texto-suave);
+  font-size: 0.84rem;
+  overflow-wrap: anywhere;
+}
+
+.moderacion-item__etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.moderacion-item__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.lista-conversaciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.conversacion-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.1rem 1.25rem;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.conversacion-item:hover {
+  border-color: var(--color-primario);
+  box-shadow: var(--sombra-elevada);
+}
+
+.conversacion-item:focus-visible {
+  outline: 2px solid var(--color-primario);
+  outline-offset: 2px;
+}
+
+.conversacion-item__cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.conversacion-item__identidad {
+  min-width: 0;
+}
+
+.conversacion-item__identidad h2 {
+  margin: 0 0 0.15rem;
+  font-size: 1.02rem;
+}
+
+.conversacion-item__identidad p {
+  margin: 0;
+  color: var(--color-primario);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.conversacion-item__etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.conversacion-item__no-leidos {
+  padding: 0.2rem 0.55rem;
+  color: var(--color-superficie);
+  background-color: var(--color-primario);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.conversacion-item__ultimo {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-texto-suave);
+  font-size: 0.85rem;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.conversacion-item__fecha {
+  color: var(--color-texto-suave);
+  font-size: 0.74rem;
+}
+
+.conversacion {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0;
+  overflow: hidden;
+}
+
+.conversacion__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 55vh;
+  padding: 1.25rem;
+  overflow-y: auto;
+  background-color: var(--color-superficie-suave);
+}
+
+.burbuja {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-width: min(78%, 560px);
+  padding: 0.7rem 0.9rem;
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 14px;
+}
+
+.burbuja--propia {
+  align-self: flex-end;
+  background-color: var(--color-primario-suave);
+  border-color: transparent;
+}
+
+.burbuja--ajena {
+  align-self: flex-start;
+}
+
+.burbuja__contenido {
+  margin: 0;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.burbuja__meta {
+  color: var(--color-texto-suave);
+  font-size: 0.72rem;
+}
+
+.conversacion__formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.15rem 1.25rem;
+  background-color: var(--color-superficie);
+  border-top: 1px solid var(--color-borde);
+}
+
+.conversacion__formulario textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+
+.conversacion__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.conversacion__contador {
+  color: var(--color-texto-suave);
+  font-size: 0.78rem;
+}
+
+.etiqueta--activa {
+  color: var(--color-exito);
+  background-color: var(--color-exito-fondo);
+}
+
+.etiqueta--pendiente_verificacion {
+  color: var(--color-advertencia);
+  background-color: var(--color-advertencia-fondo);
+}
+
+.etiqueta--suspendida,
+.etiqueta--oculta,
+.etiqueta--eliminada {
+  color: var(--color-error);
+  background-color: var(--color-error-fondo);
+}
+
 @media (max-width: 1100px) {
   .ofertas {
     grid-template-columns: minmax(220px, 250px) minmax(0, 1fr);
@@ -1466,6 +1746,44 @@ textarea {
 
   .empresa-pendiente__acciones .boton,
   .oferta-empresa__acciones .boton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 680px) {
+  .conversacion-item__cabecera,
+  .moderacion-item__cabecera {
+    flex-wrap: wrap;
+  }
+
+  .conversacion-item__etiquetas,
+  .moderacion-item__etiquetas {
+    justify-content: flex-start;
+  }
+
+  .burbuja {
+    max-width: 88%;
+  }
+}
+
+@media (max-width: 520px) {
+  .pestanas {
+    width: 100%;
+  }
+
+  .pestana {
+    flex: 1;
+  }
+
+  .moderacion-item__acciones .boton {
+    flex: 1 1 auto;
+  }
+
+  .conversacion__lista {
+    padding: 0.9rem;
+  }
+
+  .conversacion__acciones .boton {
     width: 100%;
   }
 }

@@ -41,6 +41,12 @@ export const ETIQUETA_APROBACION = {
   RECHAZADA: 'Rechazada',
 }
 
+export const ETIQUETA_ESTADO_CUENTA = {
+  ACTIVA: 'Activa',
+  PENDIENTE_VERIFICACION: 'Pendiente de verificación',
+  SUSPENDIDA: 'Suspendida',
+}
+
 export const MENSAJE_APROBACION_EMPRESA = {
   PENDIENTE:
     'Tu solicitud está en revisión. Podrás publicar ofertas cuando el administrador la apruebe.',

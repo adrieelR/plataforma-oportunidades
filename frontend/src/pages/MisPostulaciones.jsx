@@ -127,6 +127,7 @@ export default function MisPostulaciones() {
           {postulaciones.map((postulacion) => {
             const oferta = postulacion.oferta
             const empresa = oferta.empresa?.razonSocial || 'Empresa'
+            const empresaUsuarioId = oferta.empresa?.usuarioId
             const avisoOferta = obtenerAvisoOferta(oferta)
 
             return (
@@ -178,6 +179,23 @@ export default function MisPostulaciones() {
                       {formatearFechaHora(postulacion.fechaPostulacion)}
                     </li>
                   </ul>
+
+                  {empresaUsuarioId && (
+                    <div className="postulacion__acciones">
+                      <Link
+                        to={`/mensajes/${oferta.id}/${empresaUsuarioId}`}
+                        state={{
+                          ofertaTitulo: oferta.titulo,
+                          contactoNombre: oferta.empresa?.razonSocial,
+                          contactoRol: 'EMPRESA',
+                        }}
+                        className="boton boton--secundario boton--pequeno"
+                      >
+                        <Icono nombre="correo" tamano={16} />
+                        Enviar mensaje
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </article>
             )

@@ -211,6 +211,7 @@ export default function PostulacionesDeOferta() {
           {postulaciones.map((postulacion) => {
             const estudiante = postulacion.estudiante
             const nombre = `${estudiante.nombres} ${estudiante.apellidos}`
+            const estudianteUsuarioId = estudiante.usuarioId
             const acciones = ACCIONES_POR_ESTADO[postulacion.estado] || []
             const enviando = actualizandoId === postulacion.id
 
@@ -253,8 +254,22 @@ export default function PostulacionesDeOferta() {
                   </li>
                 </ul>
 
-                {acciones.length > 0 && (
+                {(acciones.length > 0 || estudianteUsuarioId) && (
                   <div className="candidato__acciones candidato__acciones--botones">
+                    {estudianteUsuarioId && (
+                      <Link
+                        to={`/mensajes/${id}/${estudianteUsuarioId}`}
+                        state={{
+                          ofertaTitulo: oferta?.titulo || `Oferta #${id}`,
+                          contactoNombre: nombre,
+                          contactoRol: 'ESTUDIANTE',
+                        }}
+                        className="boton boton--secundario boton--pequeno"
+                      >
+                        <Icono nombre="correo" tamano={16} />
+                        Enviar mensaje
+                      </Link>
+                    )}
                     {acciones.map((accion) => (
                       <button
                         key={accion.estado}
