@@ -276,7 +276,7 @@ plataforma-oportunidades/
 - [ ] Verificación de estudiantes por correo institucional
 - [ ] Reactivar ofertas ocultas y levantar suspensiones
 - [ ] Resolver reportes desde el panel de administración
-- [ ] Despliegue con Docker
+- [ ] Despliegue en la nube
 
 ## 👥 Equipo
 
