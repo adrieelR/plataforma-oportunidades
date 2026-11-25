@@ -195,4 +195,39 @@ describe('GET /api/busqueda/ofertas', () => {
     expect(empresa.rut).toBeUndefined();
     expect(empresa.correo).toBeUndefined();
   });
+  describe('GET /api/busqueda/ofertas/:id', () => {
+  const detalle = (id) => request(app).get(`/api/busqueda/ofertas/${id}`).set(conToken(tokenEstudiante));
+
+  test('muestra el detalle de una oferta vigente', async () => {
+    const oferta = await prisma.oferta.findFirst({ where: { titulo: 'Curso de Node.js' } });
+    const respuesta = await detalle(oferta.id);
+
+    expect(respuesta.statusCode).toBe(200);
+    expect(respuesta.body.oferta.titulo).toBe('Curso de Node.js');
+    expect(respuesta.body.oferta.empresa.razonSocial).toBe('Andes SpA');
+    expect(respuesta.body.oferta.empresa.rut).toBeUndefined();
+  });
+
+  test('responde 404 si la oferta no está vigente', async () => {
+    const cerrada = await prisma.oferta.findFirst({ where: { titulo: 'Oferta cerrada' } });
+    const vencida = await prisma.oferta.findFirst({ where: { titulo: 'Publicada pero con fecha vencida' } });
+
+    expect((await detalle(cerrada.id)).statusCode).toBe(404);
+    expect((await detalle(vencida.id)).statusCode).toBe(404);
+  });
+
+  test('responde 404 si la oferta no existe', async () => {
+    expect((await detalle(999999)).statusCode).toBe(404);
+  });
+
+  test('responde 400 si el identificador no es válido', async () => {
+    expect((await detalle('abc')).statusCode).toBe(400);
+  });
+
+  test('exige iniciar sesión', async () => {
+    const respuesta = await request(app).get('/api/busqueda/ofertas/1');
+
+    expect(respuesta.statusCode).toBe(401);
+  });
+});
 });
