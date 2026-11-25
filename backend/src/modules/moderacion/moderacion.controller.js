@@ -52,4 +52,16 @@ const suspenderCuenta = async (req, res, next) => {
   }
 };
 
-module.exports = { listarOfertas, moderarOferta, listarUsuarios, suspenderCuenta };
+const verificarEstudiante = async (req, res, next) => {
+  try {
+    const id = leerId(req, res);
+    if (id === null) return;
+
+    const resultado = await moderacionService.verificarEstudiante(req.usuario.id, id);
+    res.status(200).json(resultado);
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { listarOfertas, moderarOferta, listarUsuarios, suspenderCuenta, verificarEstudiante };

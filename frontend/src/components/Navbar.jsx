@@ -67,11 +67,10 @@ export default function Navbar() {
           aria-label="Ir al inicio de la plataforma"
         >
           <span className="navbar__logo" aria-hidden="true">
-            PO
+            PP
           </span>
           <span className="navbar__marca-texto">
-            <span className="navbar__marca-prefijo">Plataforma&nbsp;</span>
-            <strong>Oportunidades</strong>
+            <strong>PrimeraPega</strong>
           </span>
         </NavLink>
 

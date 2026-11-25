@@ -134,4 +134,55 @@ const suspenderCuenta = async (usuarioId, objetivoId, { motivo }) => {
   return { suspension, usuario };
 };
 
-module.exports = { listarOfertas, moderarOferta, listarUsuarios, suspenderCuenta };
+const verificarEstudiante = async (usuarioId, objetivoId) => {
+  await obtenerAdministrador(usuarioId);
+
+  const objetivo = await prisma.usuario.findUnique({
+    where: { id: objetivoId },
+    select: { id: true, correo: true, rol: true, estadoCuenta: true },
+  });
+
+  if (!objetivo) {
+    throw crearError('Usuario no encontrado', 404);
+  }
+
+  if (objetivo.rol !== 'ESTUDIANTE') {
+    throw crearError('Solo se pueden verificar cuentas de estudiantes', 400);
+  }
+
+  if (objetivo.estadoCuenta === 'ACTIVA') {
+    const estudiante = await prisma.estudiante.findUnique({
+      where: { usuarioId: objetivoId },
+      select: { verificado: true },
+    });
+
+    if (estudiante?.verificado) {
+      throw crearError('La cuenta ya está verificada y activa', 409);
+    }
+  }
+
+  if (objetivo.estadoCuenta === 'SUSPENDIDA') {
+    throw crearError('No se puede verificar una cuenta suspendida', 409);
+  }
+
+  const [estudiante, usuario] = await prisma.$transaction([
+    prisma.estudiante.update({
+      where: { usuarioId: objetivoId },
+      data: { verificado: true },
+      select: { id: true, verificado: true },
+    }),
+    prisma.usuario.update({
+      where: { id: objetivoId },
+      data: { estadoCuenta: 'ACTIVA' },
+      select: { id: true, correo: true, rol: true, estadoCuenta: true },
+    }),
+  ]);
+
+  return {
+    usuario,
+    estudiante,
+    mensaje: 'Cuenta verificada y activada correctamente',
+  };
+};
+
+module.exports = { listarOfertas, moderarOferta, listarUsuarios, suspenderCuenta, verificarEstudiante };
