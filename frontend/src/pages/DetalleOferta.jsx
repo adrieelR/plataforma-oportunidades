@@ -9,9 +9,12 @@ import Icono from '../components/Icono'
 import Mensaje from '../components/Mensaje'
 import { useAuth } from '../context/useAuth'
 import {
+  ETIQUETA_ESTADO_OFERTA,
+  ETIQUETA_ESTADO_POSTULACION,
   ETIQUETA_MODALIDAD,
   ETIQUETA_TIPO,
   formatearFecha,
+  varianteEstado,
 } from '../utils/formato'
 
 export default function DetalleOferta() {
@@ -19,12 +22,12 @@ export default function DetalleOferta() {
   const { usuario } = useAuth()
   const [oferta, setOferta] = useState(null)
   const [yaPostulo, setYaPostulo] = useState(false)
+  const [estadoPostulacion, setEstadoPostulacion] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [postulando, setPostulando] = useState(false)
   const [mensajeExito, setMensajeExito] = useState('')
   const [errorPostulacion, setErrorPostulacion] = useState('')
-  const [hoy] = useState(() => new Date().toISOString().slice(0, 10))
 
   useEffect(() => {
     let activo = true
@@ -34,6 +37,7 @@ export default function DetalleOferta() {
         if (activo) {
           setOferta(respuesta.oferta)
           setYaPostulo(Boolean(respuesta.yaPostulo))
+          setEstadoPostulacion(respuesta.estadoPostulacion || null)
           setError('')
         }
       })
@@ -74,9 +78,11 @@ export default function DetalleOferta() {
     )
   }
 
-  const ofertaDisponible =
-    (!oferta.estado || oferta.estado === 'PUBLICADA') &&
-    oferta.fechaLimite >= hoy
+  const ofertaDisponible = oferta.vigente === true
+  const estadoVisible =
+    !ofertaDisponible && oferta.estado === 'PUBLICADA'
+      ? 'VENCIDA'
+      : oferta.estado
   const cuentaVerificada = usuario?.estadoCuenta === 'ACTIVA'
   const puedePostular =
     ofertaDisponible && cuentaVerificada && !yaPostulo && !postulando
@@ -120,9 +126,16 @@ export default function DetalleOferta() {
               <p className="detalle__empresa">{empresa}</p>
               <h1>{oferta.titulo}</h1>
             </div>
-            <Etiqueta variante="tipo">
-              {ETIQUETA_TIPO[oferta.tipo] || oferta.tipo}
-            </Etiqueta>
+            <div className="detalle__etiquetas">
+              <Etiqueta variante="tipo">
+                {ETIQUETA_TIPO[oferta.tipo] || oferta.tipo}
+              </Etiqueta>
+              {!ofertaDisponible && estadoVisible && (
+                <Etiqueta variante={varianteEstado(estadoVisible)}>
+                  {ETIQUETA_ESTADO_OFERTA[estadoVisible] || estadoVisible}
+                </Etiqueta>
+              )}
+            </div>
           </header>
 
           <ul className="detalle__meta">
@@ -201,14 +214,23 @@ export default function DetalleOferta() {
 
             {!ofertaDisponible && (
               <Mensaje tipo="info">
-                Esta oferta ya no está disponible para postular.
+                {estadoVisible === 'CERRADA'
+                  ? 'Esta oferta fue cerrada por la empresa y ya no acepta postulaciones.'
+                  : estadoVisible === 'VENCIDA'
+                    ? `Esta oferta venció el ${formatearFecha(oferta.fechaLimite)} y ya no acepta postulaciones.`
+                    : 'Esta oferta ya no está disponible para postular.'}
               </Mensaje>
             )}
 
             {yaPostulo && (
               <Mensaje tipo="exito">
-                Ya postulaste a esta oferta.{' '}
-                <Link to="/mis-postulaciones">Revisa su estado</Link>.
+                Ya postulaste a esta oferta
+                {estadoPostulacion &&
+                  ` (estado: ${
+                    ETIQUETA_ESTADO_POSTULACION[estadoPostulacion] ||
+                    estadoPostulacion
+                  })`}
+                . <Link to="/mis-postulaciones">Revisa su estado</Link>.
               </Mensaje>
             )}
 
@@ -226,9 +248,15 @@ export default function DetalleOferta() {
           >
             {postulando
               ? 'Enviando...'
-              : oferta.tipo === 'CAPACITACION'
-                ? 'Inscribirme'
-                : 'Postular'}
+              : !ofertaDisponible
+                ? estadoVisible === 'VENCIDA'
+                  ? 'Oferta vencida'
+                  : 'Oferta cerrada'
+                : yaPostulo
+                  ? 'Ya postulaste'
+                  : oferta.tipo === 'CAPACITACION'
+                    ? 'Inscribirme'
+                    : 'Postular'}
           </button>
         </aside>
       </div>

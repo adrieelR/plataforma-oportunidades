@@ -1,6 +1,6 @@
 const prisma = require('../../db/prisma');
 const { crearError } = require('../../utils/errores');
-
+const { notificarEstadoPostulacion } = require('../notificaciones/notificaciones.service');
 // Estados en los que una oferta ya no se puede ver ni postular (la ve solo su empresa o el administrador)
 const ESTADOS_NO_VISIBLES = ['BORRADOR', 'OCULTA', 'ELIMINADA'];
 const ESTADOS_POSTULACION = ['ENVIADA', 'PRESELECCIONADA', 'ACEPTADA', 'RECHAZADA', 'CANCELADA'];
@@ -23,7 +23,16 @@ const postular = async (usuarioId, ofertaId) => {
   }
 
   // 3. No se puede postular a una oferta cerrada o vencida (por estado o por fecha límite)
-  if (oferta.estado !== 'PUBLICADA' || oferta.fechaLimite <= new Date()) {
+  const ahora = new Date();
+  if (oferta.estado === 'PUBLICADA' && oferta.fechaLimite <= ahora) {
+    await prisma.oferta.update({
+      where: { id: oferta.id },
+      data: { estado: 'VENCIDA' },
+    });
+    throw crearError('La oferta está vencida y no admite nuevas postulaciones', 409);
+  }
+
+  if (oferta.estado !== 'PUBLICADA') {
     throw crearError('La oferta ya no está vigente', 409);
   }
 
@@ -89,11 +98,36 @@ const cambiarEstado = async (usuarioId, postulacionId, nuevoEstado) => {
     throw crearError(`La postulación ya está en estado ${nuevoEstado}`, 409);
   }
 
-  return prisma.postulacion.update({
+  const actualizada = await prisma.postulacion.update({
     where: { id: postulacionId },
     data: { estado: nuevoEstado },
-    select: { id: true, ofertaId: true, estudianteId: true, tipo: true, estado: true, fechaPostulacion: true },
+    select: {
+      id: true,
+      ofertaId: true,
+      estudianteId: true,
+      tipo: true,
+      estado: true,
+      fechaPostulacion: true,
+      estudiante: { select: { usuarioId: true, nombres: true } },
+      oferta: { select: { titulo: true } },
+    },
   });
+
+  await notificarEstadoPostulacion({
+    usuarioId: actualizada.estudiante.usuarioId,
+    nombre: actualizada.estudiante.nombres,
+    tituloOferta: actualizada.oferta.titulo,
+    estado: nuevoEstado,
+  });
+
+  return {
+    id: actualizada.id,
+    ofertaId: actualizada.ofertaId,
+    estudianteId: actualizada.estudianteId,
+    tipo: actualizada.tipo,
+    estado: actualizada.estado,
+    fechaPostulacion: actualizada.fechaPostulacion,
+  };
 };
 
 // HU-12: el estudiante ve todas sus postulaciones con su estado actual

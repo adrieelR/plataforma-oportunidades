@@ -13,6 +13,7 @@ import Login from './pages/Login'
 import Mensajes from './pages/Mensajes'
 import MisPostulaciones from './pages/MisPostulaciones'
 import NoEncontrada from './pages/NoEncontrada'
+import Notificaciones from './pages/Notificaciones'
 import NuevaOferta from './pages/NuevaOferta'
 import Ofertas from './pages/Ofertas'
 import PostulacionesDeOferta from './pages/PostulacionesDeOferta'
@@ -83,6 +84,14 @@ export default function App() {
             element={
               <RutaProtegida roles={['ESTUDIANTE', 'EMPRESA']}>
                 <Conversacion />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/notificaciones"
+            element={
+              <RutaProtegida roles={['ESTUDIANTE', 'EMPRESA', 'ADMINISTRADOR']}>
+                <Notificaciones />
               </RutaProtegida>
             }
           />

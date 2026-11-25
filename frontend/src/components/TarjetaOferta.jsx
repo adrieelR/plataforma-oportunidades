@@ -8,7 +8,11 @@ import Avatar from './Avatar'
 import Etiqueta from './Etiqueta'
 import Icono from './Icono'
 
-export default function TarjetaOferta({ oferta }) {
+export default function TarjetaOferta({
+  oferta,
+  onReportar,
+  reportando = false,
+}) {
   const empresa = oferta.empresa?.razonSocial || 'Empresa'
 
   return (
@@ -49,12 +53,25 @@ export default function TarjetaOferta({ oferta }) {
           <Icono nombre="calendario" tamano={15} />
           Hasta {formatearFecha(oferta.fechaLimite)}
         </span>
-        <Link
-          to={`/ofertas/${oferta.id}`}
-          className="boton boton--secundario boton--pequeno"
-        >
-          Ver detalle
-        </Link>
+        <div className="tarjeta-oferta__acciones">
+          {onReportar && (
+            <button
+              type="button"
+              className="boton boton--secundario boton--pequeno"
+              onClick={() => onReportar(oferta)}
+              disabled={reportando}
+            >
+              <Icono nombre="escudo" tamano={16} />
+              {reportando ? 'Enviando...' : 'Reportar'}
+            </button>
+          )}
+          <Link
+            to={`/ofertas/${oferta.id}`}
+            className="boton boton--secundario boton--pequeno"
+          >
+            Ver detalle
+          </Link>
+        </div>
       </footer>
     </article>
   )

@@ -460,6 +460,16 @@ textarea {
   background-color: var(--color-info-fondo);
 }
 
+.etiqueta--resuelto {
+  color: var(--color-exito);
+  background-color: var(--color-exito-fondo);
+}
+
+.etiqueta--descartado {
+  color: var(--color-texto-suave);
+  background-color: var(--color-superficie-suave);
+}
+
 .etiqueta--cerrada,
 .etiqueta--vencida,
 .etiqueta--rechazada {
@@ -790,6 +800,14 @@ textarea {
   border-top: 1px solid var(--color-borde);
 }
 
+.tarjeta-oferta__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
 .tarjeta-oferta__fecha {
   color: var(--color-texto-suave);
   font-size: 0.76rem;
@@ -815,6 +833,13 @@ textarea {
 .detalle__encabezado-texto {
   flex: 1;
   min-width: 0;
+}
+
+.detalle__etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.35rem;
 }
 
 .detalle__encabezado h1 {
@@ -1431,6 +1456,40 @@ textarea {
   gap: 0.5rem;
 }
 
+.reporte-item__motivo {
+  margin: 0;
+  color: var(--color-texto);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.reporte-item__datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-borde);
+}
+
+.reporte-item__datos dt {
+  color: var(--color-texto-suave);
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.reporte-item__datos dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.2rem 0 0;
+  font-size: 0.86rem;
+  overflow-wrap: anywhere;
+}
+
 .lista-conversaciones {
   display: flex;
   flex-direction: column;
@@ -1513,6 +1572,37 @@ textarea {
 .conversacion-item__fecha {
   color: var(--color-texto-suave);
   font-size: 0.74rem;
+}
+
+.lista-notificaciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.notificacion__cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.notificacion__cabecera h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.notificacion__cuerpo {
+  margin: 0.5rem 0 0;
+  color: var(--color-texto-suave);
+  white-space: pre-line;
+}
+
+.notificacion__fecha {
+  display: inline-block;
+  margin-top: 0.65rem;
+  color: var(--color-texto-suave);
+  font-size: 0.8rem;
 }
 
 .conversacion {

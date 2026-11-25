@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
+import { notificacionesDisponibles } from '../api/config'
 import { useAuth } from '../context/useAuth'
 import { ETIQUETA_ROL, inicioSegunRol } from '../utils/roles'
 import Avatar from './Avatar'
@@ -23,12 +24,23 @@ const ENLACES_POR_ROL = {
   ],
 }
 
+const ENLACE_NOTIFICACIONES = {
+  to: '/notificaciones',
+  texto: 'Notificaciones',
+  icono: 'campana',
+}
+
 export default function Navbar() {
   const { estaAutenticado, usuario, perfil, rol, logout } = useAuth()
   const navigate = useNavigate()
   const [menuAbierto, setMenuAbierto] = useState(false)
 
-  const enlaces = rol ? ENLACES_POR_ROL[rol] || [] : []
+  const enlaces = rol
+    ? [
+        ...(ENLACES_POR_ROL[rol] || []),
+        ...(notificacionesDisponibles ? [ENLACE_NOTIFICACIONES] : []),
+      ]
+    : []
   const destinoMarca = estaAutenticado ? inicioSegunRol(rol) : '/'
   const nombreVisible = perfil?.nombres
     ? `${perfil.nombres} ${perfil.apellidos}`

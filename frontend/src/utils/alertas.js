@@ -32,6 +32,8 @@ export async function solicitarMotivo({
   texto,
   textoConfirmar = 'Confirmar',
   placeholder = 'Escribe el motivo (entre 10 y 500 caracteres).',
+  minimo = 10,
+  maximo = 500,
 }) {
   const resultado = await Swal.fire({
     title: titulo,
@@ -41,7 +43,7 @@ export async function solicitarMotivo({
     inputPlaceholder: placeholder,
     inputAttributes: {
       'aria-label': 'Motivo',
-      maxlength: 500,
+      maxlength: maximo,
     },
     showCancelButton: true,
     reverseButtons: true,
@@ -52,12 +54,12 @@ export async function solicitarMotivo({
     inputValidator: (valor) => {
       const motivo = (valor || '').trim()
 
-      if (motivo.length < 10) {
-        return 'El motivo debe tener al menos 10 caracteres.'
+      if (motivo.length < minimo) {
+        return `El motivo debe tener al menos ${minimo} caracteres.`
       }
 
-      if (motivo.length > 500) {
-        return 'El motivo no puede superar los 500 caracteres.'
+      if (motivo.length > maximo) {
+        return `El motivo no puede superar los ${maximo} caracteres.`
       }
 
       return undefined

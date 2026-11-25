@@ -37,7 +37,7 @@ Públicas:
 
 ESTUDIANTE:
 - `/ofertas`: lista de ofertas con buscador por palabra clave y filtro por tipo.
-- `/ofertas/:id`: detalle y botón "Postular" (o "Inscribirme" si el tipo es CAPACITACION).
+- `/ofertas/:id`: detalle mediante `GET /busqueda/ofertas/:id` y botón "Postular" (o "Inscribirme" si el tipo es CAPACITACION). Si `oferta.vigente` es `false`, mostrar "Cerrada" o "Vencida" y deshabilitar el botón.
 - `/mis-postulaciones`: lista con el estado de cada postulación.
 - Si la cuenta está en `PENDIENTE_VERIFICACION`, mostrar un aviso: "Verifica tu correo para poder postular".
 
@@ -93,11 +93,13 @@ Verificación simulada: en este prototipo el correo no se envía. El backend imp
 
 | Método y ruta | Quién | Cuerpo o parámetros | Respuesta exitosa | Errores | Estado |
 |---|---|---|---|---|---|
-| `GET /ofertas` | cualquier usuario con sesión | query: `q` (palabra clave), `tipo` | 200 `{ ofertas: [ { id, titulo, descripcion, tipo, modalidad, area, ubicacion, cupos, fechaLimite, fechaPublicacion, empresa: { razonSocial } } ] }` solo vigentes | 401 | PRÓXIMO |
-| `GET /ofertas/:id` | cualquier usuario con sesión | | 200 `{ oferta, yaPostulo }` (`yaPostulo` solo para estudiantes) | 404 | PRÓXIMO |
-| `POST /ofertas` | EMPRESA aprobada | `{ titulo, descripcion, tipo, modalidad, area, ubicacion, cupos?, fechaLimite }` con `fechaLimite` en formato `AAAA-MM-DD` | 201 `{ oferta }` | 400 validación; 403 empresa no aprobada | PRÓXIMO |
-| `GET /ofertas/mias` | EMPRESA | | 200 `{ ofertas: [ { ...campos, estado, totalPostulaciones } ] }` | 401, 403 | PRÓXIMO |
-| `PATCH /ofertas/:id/cerrar` | EMPRESA dueña | | 200 `{ oferta: { id, estado } }` | 403 no es su oferta; 404 | PRÓXIMO |
+| `GET /busqueda/ofertas` | ESTUDIANTE | query: `q` (palabra clave), `tipo`, `modalidad`, `area`, `ubicacion`, `pagina`, `limite` | 200 `{ ofertas: [ { id, titulo, descripcion, tipo, modalidad, area, ubicacion, cupos, fechaLimite, fechaPublicacion, empresa: { razonSocial } } ], paginacion }` solo vigentes | 401, 403 | LISTO |
+| `GET /busqueda/ofertas/:id` | ESTUDIANTE | | 200 `{ oferta, yaPostulo, estadoPostulacion }`; `oferta` incluye datos públicos, `estado`, `fechaLimite`, `empresa: { razonSocial, rubro }` y `vigente` | 401, 403; 404 si no existe, está en borrador/eliminada/oculta, o está cerrada/vencida y el estudiante no postuló | LISTO |
+| `POST /ofertas` | EMPRESA aprobada | `{ titulo, descripcion, tipo, modalidad, area, ubicacion, cupos?, fechaLimite }` con `fechaLimite` en formato `AAAA-MM-DD` | 201 `{ oferta }` | 400 validación; 403 empresa no aprobada | LISTO |
+| `GET /ofertas/mias` | EMPRESA | | 200 `{ ofertas: [ { ...campos, estado, totalPostulaciones } ] }` | 401, 403 | LISTO |
+| `PATCH /ofertas/:id/estado` | EMPRESA dueña | `{ estado }` con `PUBLICADA` o `CERRADA` | 200 `{ oferta: { id, estado } }` | 400; 403; 404; 409 | LISTO |
+
+Nota: en `GET /busqueda/ofertas/:id`, una oferta cerrada o vencida solo es visible para el estudiante que ya postuló. Si `oferta.vigente` es `false`, la interfaz muestra "Cerrada" o "Vencida" y deshabilita la postulación.
 
 ### Postulaciones
 

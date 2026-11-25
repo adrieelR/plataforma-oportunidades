@@ -30,6 +30,12 @@ export const ETIQUETA_ESTADO_POSTULACION = {
   CANCELADA: 'Cancelada',
 }
 
+export const ESTADOS_POSTULACION_FINALES = [
+  'ACEPTADA',
+  'RECHAZADA',
+  'CANCELADA',
+]
+
 export const ETIQUETA_TIPO_POSTULACION = {
   POSTULACION: 'Postulación',
   INSCRIPCION: 'Inscripción',
@@ -47,6 +53,22 @@ export const ETIQUETA_ESTADO_CUENTA = {
   SUSPENDIDA: 'Suspendida',
 }
 
+export const ETIQUETA_ESTADO_REPORTE = {
+  PENDIENTE: 'Pendiente',
+  RESUELTO: 'Resuelto',
+  DESCARTADO: 'Descartado',
+}
+
+export const ETIQUETA_TIPO_NOTIFICACION = {
+  CONFIRMACION_REGISTRO: 'Registro',
+  VERIFICACION_CORREO: 'Verificación',
+  CONFIRMACION_POSTULACION: 'Postulación',
+  CAMBIO_ESTADO_POSTULACION: 'Cambio de estado',
+  APROBACION_EMPRESA: 'Aprobación de empresa',
+  CAMBIO_ESTADO_CUENTA: 'Estado de cuenta',
+  RECUPERACION_CONTRASENA: 'Recuperación de contraseña',
+}
+
 export const MENSAJE_APROBACION_EMPRESA = {
   PENDIENTE:
     'Tu solicitud está en revisión. Podrás publicar ofertas cuando el administrador la apruebe.',
@@ -59,6 +81,20 @@ export function mensajeAprobacionEmpresa(estado) {
     MENSAJE_APROBACION_EMPRESA[estado] ||
     MENSAJE_APROBACION_EMPRESA.PENDIENTE
   )
+}
+
+export function fechaLimiteVencida(fechaLimite) {
+  if (!fechaLimite) {
+    return false
+  }
+
+  const fecha =
+    fechaLimite instanceof Date
+      ? fechaLimite.toISOString().slice(0, 10)
+      : String(fechaLimite).slice(0, 10)
+  const hoy = new Date().toISOString().slice(0, 10)
+
+  return fecha <= hoy
 }
 
 export function formatearFecha(fecha) {

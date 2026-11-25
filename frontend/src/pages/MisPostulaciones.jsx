@@ -12,15 +12,16 @@ import {
   ETIQUETA_ESTADO_POSTULACION,
   ETIQUETA_MODALIDAD,
   ETIQUETA_TIPO_POSTULACION,
+  fechaLimiteVencida,
   formatearFechaHora,
   varianteEstado,
 } from '../utils/formato'
 
 function obtenerAvisoOferta(oferta) {
-  const hoy = new Date().toISOString().slice(0, 10)
-  const fechaLimite = oferta.fechaLimite?.slice(0, 10)
-
-  if (oferta.estado === 'VENCIDA' || (fechaLimite && fechaLimite < hoy)) {
+  if (
+    oferta.estado === 'VENCIDA' ||
+    fechaLimiteVencida(oferta.fechaLimite)
+  ) {
     return { texto: 'Oferta vencida', variante: 'vencida' }
   }
 

@@ -22,7 +22,7 @@ function validar(formulario, hoy) {
 
   if (!formulario.fechaLimite) {
     errores.fechaLimite = 'Selecciona una fecha límite.'
-  } else if (formulario.fechaLimite < hoy) {
+  } else if (formulario.fechaLimite <= hoy) {
     errores.fechaLimite = 'La fecha límite debe ser posterior a hoy.'
   }
 
@@ -49,6 +49,11 @@ export default function FormularioOferta({
   const [errorGeneral, setErrorGeneral] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [hoy] = useState(() => new Date().toISOString().slice(0, 10))
+  const [manana] = useState(() => {
+    const fecha = new Date()
+    fecha.setDate(fecha.getDate() + 1)
+    return fecha.toISOString().slice(0, 10)
+  })
 
   const manejarCambio = (evento) => {
     const { name, value } = evento.target
@@ -280,7 +285,7 @@ export default function FormularioOferta({
                 id="oferta-fecha-limite"
                 name="fechaLimite"
                 type="date"
-                min={hoy}
+                min={manana}
                 value={formulario.fechaLimite}
                 onChange={manejarCambio}
                 aria-invalid={Boolean(erroresCampo.fechaLimite)}

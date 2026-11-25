@@ -1,7 +1,7 @@
 import { peticion } from './cliente'
 import { usarMock } from './config'
 import {
-  cerrarOfertaMock,
+  cambiarEstadoOfertaMock,
   crearOfertaMock,
   editarOfertaMock,
   eliminarOfertaMock,
@@ -33,7 +33,7 @@ export async function obtenerOferta(id) {
     return obtenerOfertaMock(id)
   }
 
-  return peticion(`/ofertas/${id}`)
+  return peticion(`/busqueda/ofertas/${id}`)
 }
 
 export async function crearOferta(datos) {
@@ -76,13 +76,21 @@ export async function eliminarOferta(id) {
   return peticion(`/ofertas/${id}`, { metodo: 'DELETE' })
 }
 
-export async function cerrarOferta(id) {
+export async function cambiarEstadoOferta(id, estado) {
   if (usarMock.ofertasEmpresa) {
-    return cerrarOfertaMock(id)
+    return cambiarEstadoOfertaMock(id, estado)
   }
 
   return peticion(`/ofertas/${id}/estado`, {
     metodo: 'PATCH',
-    cuerpo: { estado: 'CERRADA' },
+    cuerpo: { estado },
   })
+}
+
+export async function cerrarOferta(id) {
+  return cambiarEstadoOferta(id, 'CERRADA')
+}
+
+export async function reabrirOferta(id) {
+  return cambiarEstadoOferta(id, 'PUBLICADA')
 }
