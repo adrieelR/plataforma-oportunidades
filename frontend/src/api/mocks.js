@@ -1070,3 +1070,29 @@ export async function decidirEmpresaMock(id, decision) {
     empresa: { id: empresa.id, estadoAprobacion: empresa.estadoAprobacion },
   }
 }
+
+export async function verificarEstudianteMock(id) {
+  await esperar(350)
+  buscarAdminActual()
+
+  const cuenta = CUENTAS_DEMO.find((item) => item.id === Number(id))
+
+  if (!cuenta) {
+    throw new ErrorApi('El usuario no existe', 404)
+  }
+
+  if (cuenta.rol !== 'ESTUDIANTE') {
+    throw new ErrorApi('Solo se pueden verificar cuentas de estudiantes', 400)
+  }
+
+  if (cuenta.estadoCuenta === 'ACTIVA') {
+    throw new ErrorApi('La cuenta ya está verificada y activa', 409)
+  }
+
+  cuenta.estadoCuenta = 'ACTIVA'
+
+  return {
+    usuario: { id: cuenta.id, estadoCuenta: cuenta.estadoCuenta },
+    mensaje: 'Cuenta verificada y activada correctamente',
+  }
+}

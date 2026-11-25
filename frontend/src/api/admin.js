@@ -1,6 +1,10 @@
 import { peticion } from './cliente'
 import { usarMock } from './config'
-import { decidirEmpresaMock, listarEmpresasMock } from './mocks'
+import {
+  decidirEmpresaMock,
+  listarEmpresasMock,
+  verificarEstudianteMock,
+} from './mocks'
 
 export async function listarEmpresas({ estado = 'PENDIENTE' } = {}) {
   if (usarMock.admin) {
@@ -42,5 +46,15 @@ export async function suspenderCuenta(id, motivo) {
   return peticion(`/admin/usuarios/${id}/suspension`, {
     metodo: 'PATCH',
     cuerpo: { motivo },
+  })
+}
+
+export async function verificarEstudiante(id) {
+  if (usarMock.verificarEstudiante) {
+    return verificarEstudianteMock(id)
+  }
+
+  return peticion(`/admin/usuarios/${id}/verificacion`, {
+    metodo: 'PATCH',
   })
 }

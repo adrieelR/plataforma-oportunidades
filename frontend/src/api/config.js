@@ -22,6 +22,7 @@ export const usarMock = {
   moderarOferta: false,
   usuariosAdmin: false,
   suspenderCuenta: false,
+  verificarEstudiante: false,
   // Reportes (RF-13): endpoints reales, sin simulación.
   reportar: false,
   reportesAdmin: false,

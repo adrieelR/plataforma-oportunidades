@@ -21,9 +21,9 @@ export default function AuthLayout({
       <aside className="auth__marca">
         <Link to="/login" className="auth__marca-logo">
           <span className="auth__marca-icono" aria-hidden="true">
-            PO
+            PP
           </span>
-          <span>Plataforma de Oportunidades</span>
+          <span>PrimeraPega</span>
         </Link>
 
         <div className="auth__marca-contenido">

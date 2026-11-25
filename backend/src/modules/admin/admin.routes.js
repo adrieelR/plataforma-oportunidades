@@ -28,4 +28,6 @@ router.get('/usuarios', moderacionController.listarUsuarios);
 
 router.patch('/usuarios/:id/suspension', validar(suspenderCuentaSchema), moderacionController.suspenderCuenta);
 
+router.patch('/usuarios/:id/verificacion', moderacionController.verificarEstudiante);
+
 module.exports = router;
