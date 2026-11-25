@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { listarOfertas } from '../api/ofertas'
+import { crearReporte } from '../api/reportes'
 import Cargando from '../components/Cargando'
 import EstadoVacio from '../components/EstadoVacio'
 import Icono from '../components/Icono'
 import Mensaje from '../components/Mensaje'
 import TarjetaOferta from '../components/TarjetaOferta'
 import { useAuth } from '../context/useAuth'
+import { solicitarMotivo } from '../utils/alertas'
 import { ETIQUETA_MODALIDAD, ETIQUETA_TIPO } from '../utils/formato'
 
 const FILTROS_INICIALES = {
@@ -27,6 +29,9 @@ export default function Ofertas() {
   const [paginacion, setPaginacion] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
+  const [reportandoId, setReportandoId] = useState(null)
+  const [mensajeReporte, setMensajeReporte] = useState('')
+  const [errorReporte, setErrorReporte] = useState('')
 
   useEffect(() => {
     let activo = true
@@ -96,6 +101,36 @@ export default function Ofertas() {
     setUbicacion('')
     setCargando(true)
     setFiltros(FILTROS_INICIALES)
+  }
+
+  const reportarOferta = async (oferta) => {
+    const motivo = await solicitarMotivo({
+      titulo: 'Reportar publicación',
+      texto: `Indica el motivo por el que reportas "${oferta.titulo}".`,
+      textoConfirmar: 'Reportar',
+      placeholder: 'Describe el problema (entre 5 y 500 caracteres).',
+      minimo: 5,
+      maximo: 500,
+    })
+
+    if (!motivo) {
+      return
+    }
+
+    setMensajeReporte('')
+    setErrorReporte('')
+    setReportandoId(oferta.id)
+
+    try {
+      await crearReporte({ ofertaId: oferta.id, motivo })
+      setMensajeReporte(
+        'Reporte enviado. El equipo administrador lo revisará.',
+      )
+    } catch (fallo) {
+      setErrorReporte(fallo?.mensaje || 'No se pudo enviar el reporte.')
+    } finally {
+      setReportandoId(null)
+    }
   }
 
   const hayFiltros = Boolean(
@@ -241,6 +276,13 @@ export default function Ofertas() {
 
           {error && <Mensaje tipo="error">{error}</Mensaje>}
 
+          {mensajeReporte && (
+            <Mensaje tipo="exito">{mensajeReporte}</Mensaje>
+          )}
+          {errorReporte && (
+            <Mensaje tipo="error">{errorReporte}</Mensaje>
+          )}
+
           {cargando && (
             <div className="cargando-pagina">
               <Cargando texto="Cargando ofertas..." />
@@ -258,7 +300,12 @@ export default function Ofertas() {
           {!cargando && !error && ofertas.length > 0 && (
             <div className="rejilla-ofertas">
               {ofertas.map((oferta) => (
-                <TarjetaOferta key={oferta.id} oferta={oferta} />
+                <TarjetaOferta
+                  key={oferta.id}
+                  oferta={oferta}
+                  onReportar={reportarOferta}
+                  reportando={reportandoId === oferta.id}
+                />
               ))}
             </div>
           )}

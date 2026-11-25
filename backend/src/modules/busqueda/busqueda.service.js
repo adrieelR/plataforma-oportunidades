@@ -1,4 +1,5 @@
 const prisma = require('../../db/prisma');
+const {crearError} = require('../../utils/errores');
 
 // Solo se muestran ofertas PUBLICADAS cuya fecha límite aún no pasó (criterio de HU-05)
 const buscarOfertas = async ({ tipo, modalidad, area, ubicacion, q, pagina, limite }) => {
@@ -43,5 +44,52 @@ const buscarOfertas = async ({ tipo, modalidad, area, ubicacion, q, pagina, limi
     paginacion: { pagina, limite, total, totalPaginas: Math.ceil(total / limite) },
   };
 };
+const obtenerOferta = async (usuarioId, ofertaId) => {
+  const estudiante = await prisma.estudiante.findUnique({ where: { usuarioId } });
 
-module.exports = { buscarOfertas };
+  if (!estudiante) {
+    throw crearError('No tienes un perfil de estudiante', 403);
+  }
+
+  const oferta = await prisma.oferta.findUnique({
+    where: { id: ofertaId },
+    select: {
+      id: true,
+      titulo: true,
+      descripcion: true,
+      tipo: true,
+      modalidad: true,
+      area: true,
+      ubicacion: true,
+      cupos: true,
+      estado: true,
+      fechaLimite: true,
+      fechaPublicacion: true,
+      empresa: { select: { razonSocial: true, rubro: true } },
+    },
+  });
+
+  if (!oferta || ['BORRADOR', 'ELIMINADA', 'OCULTA'].includes(oferta.estado)) {
+    throw crearError('Oferta no encontrada', 404);
+  }
+
+  const postulacion = await prisma.postulacion.findUnique({
+    where: { estudianteId_ofertaId: { estudianteId: estudiante.id, ofertaId } },
+    select: { estado: true },
+  });
+
+  const vigente = oferta.estado === 'PUBLICADA' && oferta.fechaLimite > new Date();
+
+  // Una oferta cerrada o vencida solo la ve quien postuló a ella
+  if (!vigente && !postulacion) {
+    throw crearError('Oferta no encontrada', 404);
+  }
+
+  return {
+    oferta: { ...oferta, vigente },
+    yaPostulo: Boolean(postulacion),
+    estadoPostulacion: postulacion ? postulacion.estado : null,
+  };
+};
+
+module.exports = { buscarOfertas , obtenerOferta}; 

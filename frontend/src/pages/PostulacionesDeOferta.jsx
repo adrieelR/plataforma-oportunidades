@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { obtenerOferta } from '../api/ofertas'
+import { listarMisOfertas } from '../api/ofertas'
 import {
   cambiarEstadoPostulacion,
   listarPostulacionesDeOferta,
@@ -13,6 +13,7 @@ import Icono from '../components/Icono'
 import Mensaje from '../components/Mensaje'
 import { confirmarAccion } from '../utils/alertas'
 import {
+  ESTADOS_POSTULACION_FINALES,
   ETIQUETA_ESTADO_OFERTA,
   ETIQUETA_ESTADO_POSTULACION,
   ETIQUETA_TIPO_POSTULACION,
@@ -53,11 +54,23 @@ export default function PostulacionesDeOferta() {
   useEffect(() => {
     let activo = true
 
-    obtenerOferta(id)
+    listarMisOfertas()
       .then((respuesta) => {
-        if (activo) {
-          setOferta(respuesta.oferta)
+        if (!activo) {
+          return
+        }
+
+        const encontrada = respuesta.ofertas.find(
+          (item) => item.id === Number(id),
+        )
+
+        if (encontrada) {
+          setOferta(encontrada)
           setErrorOferta('')
+        } else {
+          setErrorOferta(
+            'La oferta no existe o no tienes permiso para verla.',
+          )
         }
       })
       .catch((fallo) => {
@@ -99,6 +112,14 @@ export default function PostulacionesDeOferta() {
   }, [id, estadoFiltro])
 
   const cambiarEstado = async (postulacion, nuevoEstado) => {
+    if (ESTADOS_POSTULACION_FINALES.includes(postulacion.estado)) {
+      setMensaje('')
+      setErrorAccion(
+        'Esta postulación ya fue resuelta y no se puede cambiar.',
+      )
+      return
+    }
+
     const nombre = `${postulacion.estudiante.nombres} ${postulacion.estudiante.apellidos}`
 
     if (ACCIONES_CON_CONFIRMACION.includes(nuevoEstado)) {
@@ -212,7 +233,12 @@ export default function PostulacionesDeOferta() {
             const estudiante = postulacion.estudiante
             const nombre = `${estudiante.nombres} ${estudiante.apellidos}`
             const estudianteUsuarioId = estudiante.usuarioId
-            const acciones = ACCIONES_POR_ESTADO[postulacion.estado] || []
+            const esFinal = ESTADOS_POSTULACION_FINALES.includes(
+              postulacion.estado,
+            )
+            const acciones = esFinal
+              ? []
+              : ACCIONES_POR_ESTADO[postulacion.estado] || []
             const enviando = actualizandoId === postulacion.id
 
             return (

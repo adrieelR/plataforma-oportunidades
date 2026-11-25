@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { cerrarOferta, eliminarOferta, listarMisOfertas } from '../api/ofertas'
+import {
+  cerrarOferta,
+  eliminarOferta,
+  listarMisOfertas,
+  reabrirOferta,
+} from '../api/ofertas'
 import Cargando from '../components/Cargando'
 import EstadoVacio from '../components/EstadoVacio'
 import Etiqueta from '../components/Etiqueta'
@@ -13,6 +18,7 @@ import {
   ETIQUETA_ESTADO_OFERTA,
   ETIQUETA_MODALIDAD,
   ETIQUETA_TIPO,
+  fechaLimiteVencida,
   formatearFecha,
   mensajeAprobacionEmpresa,
   varianteEstado,
@@ -26,6 +32,7 @@ export default function EmpresaOfertas() {
   const [error, setError] = useState('')
   const [mensaje, setMensaje] = useState(location.state?.mensaje || '')
   const [cerrandoId, setCerrandoId] = useState(null)
+  const [reabriendoId, setReabriendoId] = useState(null)
   const [eliminandoId, setEliminandoId] = useState(null)
 
   useEffect(() => {
@@ -54,8 +61,17 @@ export default function EmpresaOfertas() {
   }, [])
 
   const empresaAprobada = perfil?.estadoAprobacion === 'APROBADA'
-  const publicadas = ofertas.filter((oferta) => oferta.estado === 'PUBLICADA')
+  const estaVencida = (oferta) =>
+    oferta.estado === 'VENCIDA' ||
+    (oferta.estado === 'PUBLICADA' &&
+      fechaLimiteVencida(oferta.fechaLimite))
+  const estadoVisibleDeOferta = (oferta) =>
+    estaVencida(oferta) ? 'VENCIDA' : oferta.estado
+  const publicadas = ofertas.filter(
+    (oferta) => oferta.estado === 'PUBLICADA' && !estaVencida(oferta),
+  )
   const cerradas = ofertas.filter((oferta) => oferta.estado === 'CERRADA')
+  const vencidas = ofertas.filter(estaVencida)
   const totalPostulaciones = ofertas.reduce(
     (total, oferta) => total + (oferta.totalPostulaciones || 0),
     0,
@@ -119,6 +135,37 @@ export default function EmpresaOfertas() {
     }
   }
 
+  const manejarReapertura = async (oferta) => {
+    const confirmado = await confirmarAccion({
+      titulo: '¿Reabrir la oferta?',
+      texto: `"${oferta.titulo}" volverá a aparecer en la lista pública.`,
+      textoConfirmar: 'Reabrir oferta',
+      peligro: false,
+    })
+
+    if (!confirmado) {
+      return
+    }
+
+    setMensaje('')
+    setError('')
+    setReabriendoId(oferta.id)
+
+    try {
+      await reabrirOferta(oferta.id)
+      setOfertas((actuales) =>
+        actuales.map((item) =>
+          item.id === oferta.id ? { ...item, estado: 'PUBLICADA' } : item,
+        ),
+      )
+      setMensaje('Oferta reabierta correctamente.')
+    } catch (fallo) {
+      setError(fallo?.mensaje || 'No se pudo reabrir la oferta.')
+    } finally {
+      setReabriendoId(null)
+    }
+  }
+
   return (
     <section className="pagina">
       <header className="pagina__encabezado pagina__encabezado--fila">
@@ -173,6 +220,13 @@ export default function EmpresaOfertas() {
           </article>
           <article className="metrica panel">
             <span className="metrica__icono">
+              <Icono nombre="reloj" tamano={19} />
+            </span>
+            <span className="metrica__valor">{vencidas.length}</span>
+            <span className="metrica__etiqueta">Ofertas vencidas</span>
+          </article>
+          <article className="metrica panel">
+            <span className="metrica__icono">
               <Icono nombre="usuarios" tamano={19} />
             </span>
             <span className="metrica__valor">{totalPostulaciones}</span>
@@ -209,8 +263,12 @@ export default function EmpresaOfertas() {
                     <Etiqueta variante="tipo">
                       {ETIQUETA_TIPO[oferta.tipo] || oferta.tipo}
                     </Etiqueta>
-                    <Etiqueta variante={varianteEstado(oferta.estado)}>
-                      {ETIQUETA_ESTADO_OFERTA[oferta.estado] || oferta.estado}
+                    <Etiqueta
+                      variante={varianteEstado(estadoVisibleDeOferta(oferta))}
+                    >
+                      {ETIQUETA_ESTADO_OFERTA[
+                        estadoVisibleDeOferta(oferta)
+                      ] || estadoVisibleDeOferta(oferta)}
                     </Etiqueta>
                   </div>
                   <h2 className="oferta-empresa__titulo">{oferta.titulo}</h2>
@@ -241,7 +299,8 @@ export default function EmpresaOfertas() {
                 <div>
                   <dt>Estado</dt>
                   <dd>
-                    {ETIQUETA_ESTADO_OFERTA[oferta.estado] || oferta.estado}
+                    {ETIQUETA_ESTADO_OFERTA[estadoVisibleDeOferta(oferta)] ||
+                      estadoVisibleDeOferta(oferta)}
                   </dd>
                 </div>
               </dl>
@@ -253,15 +312,16 @@ export default function EmpresaOfertas() {
                 >
                   Ver postulaciones
                 </Link>
-                {ESTADOS_OFERTA_EDITABLES.includes(oferta.estado) && (
-                  <Link
-                    to={`/empresa/ofertas/${oferta.id}/editar`}
-                    className="boton boton--secundario boton--pequeno"
-                  >
-                    Editar
-                  </Link>
-                )}
-                {oferta.estado === 'PUBLICADA' && (
+                {ESTADOS_OFERTA_EDITABLES.includes(oferta.estado) &&
+                  !estaVencida(oferta) && (
+                    <Link
+                      to={`/empresa/ofertas/${oferta.id}/editar`}
+                      className="boton boton--secundario boton--pequeno"
+                    >
+                      Editar
+                    </Link>
+                  )}
+                {oferta.estado === 'PUBLICADA' && !estaVencida(oferta) && (
                   <button
                     type="button"
                     className="boton boton--peligro boton--pequeno"
@@ -273,6 +333,19 @@ export default function EmpresaOfertas() {
                       : 'Cerrar oferta'}
                   </button>
                 )}
+                {oferta.estado === 'CERRADA' &&
+                  !fechaLimiteVencida(oferta.fechaLimite) && (
+                    <button
+                      type="button"
+                      className="boton boton--secundario boton--pequeno"
+                      onClick={() => manejarReapertura(oferta)}
+                      disabled={reabriendoId === oferta.id}
+                    >
+                      {reabriendoId === oferta.id
+                        ? 'Reabriendo...'
+                        : 'Reabrir oferta'}
+                    </button>
+                  )}
                 <button
                   type="button"
                   className="boton boton--peligro boton--pequeno"

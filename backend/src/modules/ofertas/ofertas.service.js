@@ -56,7 +56,7 @@ const listarMisOfertas = async (usuarioId, estado) => {
   if (estado && !ESTADOS_LISTABLES.includes(estado)) {
     throw crearError('El estado solicitado no es válido', 400);
   }
-
+  await marcarOfertasVencidas(new Date(), {empresaId: empresa.id });
   return prisma.oferta.findMany({
     where: {
       empresaId: empresa.id,
@@ -78,7 +78,20 @@ const editarOferta = async (usuarioId, ofertaId, datos) => {
   return prisma.oferta.update({ where: { id: ofertaId }, data: datos });
 };
 
+// Marca como VENCIDA toda oferta PUBLICADA cuya fechaLimite ya expiró
+const marcarOfertasVencidas = async (ahora = new Date(), whereExtra = {}) => {
+  await prisma.oferta.updateMany({
+    where: {
+      estado: 'PUBLICADA',
+      fechaLimite: { lt: ahora },
+      ...whereExtra,
+    },
+    data: { estado: 'VENCIDA' },
+  });
+};
+
 const cambiarEstado = async (usuarioId, ofertaId, nuevoEstado) => {
+  await marcarOfertasVencidas();
   const empresa = await obtenerEmpresaAprobada(usuarioId);
   const oferta = await obtenerOfertaPropia(empresa.id, ofertaId);
 
@@ -151,6 +164,7 @@ module.exports = {
   listarMisOfertas,
   editarOferta,
   cambiarEstado,
+  marcarOfertasVencidas,
   eliminarOferta,
   listarPostulaciones,
 };

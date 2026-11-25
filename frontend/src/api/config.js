@@ -9,7 +9,8 @@ export const usarMock = {
   registroEmpresa: false,
   verificar: true,
   perfil: false,
-  ofertas: true,
+  // Detalle de oferta: GET /busqueda/ofertas/:id (ESTUDIANTE).
+  ofertas: false,
   ofertasEmpresa: false,
   busqueda: false,
   postular: false,
@@ -21,4 +22,11 @@ export const usarMock = {
   moderarOferta: false,
   usuariosAdmin: false,
   suspenderCuenta: false,
+  // Reportes (RF-13): endpoints reales, sin simulación.
+  reportar: false,
+  reportesAdmin: false,
 }
+
+// HU-10: la API aún no expone endpoints para listar/leer notificaciones.
+// Se mantiene en false para no llamar rutas inexistentes.
+export const notificacionesDisponibles = false

@@ -261,7 +261,7 @@ function normalizarCorreo(correo) {
 
 function estaVigente(oferta) {
   return (
-    oferta.estado === 'PUBLICADA' && oferta.fechaLimite >= fechaEnDias(0)
+    oferta.estado === 'PUBLICADA' && oferta.fechaLimite > fechaEnDias(0)
   )
 }
 
@@ -363,6 +363,7 @@ function ofertaDetalle(oferta) {
   return {
     ...ofertaPublica(oferta),
     estado: oferta.estado,
+    vigente: estaVigente(oferta),
   }
 }
 
@@ -617,32 +618,43 @@ export async function listarOfertasMock({
 
 export async function obtenerOfertaMock(id) {
   await esperar(250)
+  const usuario = buscarCuentaActual()
+
+  if (usuario.rol !== 'ESTUDIANTE') {
+    throw new ErrorApi('Tu rol no tiene permiso para esta acción', 403)
+  }
+
+  const estudiante = ESTUDIANTES.find(
+    (item) =>
+      item.usuarioId === usuario.id ||
+      normalizarCorreo(item.correo) === normalizarCorreo(usuario.correo),
+  )
+
+  if (!estudiante) {
+    throw new ErrorApi('No tienes un perfil de estudiante', 403)
+  }
+
   const oferta = OFERTAS.find((item) => item.id === Number(id))
 
-  if (!oferta) {
+  if (!oferta || ['BORRADOR', 'ELIMINADA', 'OCULTA'].includes(oferta.estado)) {
     throw new ErrorApi('La oferta no existe', 404)
   }
 
-  const usuario = obtenerUsuarioGuardado()
-  const respuesta = { oferta: ofertaDetalle(oferta) }
+  const postulacion = POSTULACIONES.find(
+    (item) =>
+      item.ofertaId === oferta.id && item.estudianteId === estudiante.id,
+  )
+  const vigente = estaVigente(oferta)
 
-  if (usuario?.rol === 'ESTUDIANTE') {
-    const estudiante = ESTUDIANTES.find(
-      (item) =>
-        item.usuarioId === usuario.id ||
-        normalizarCorreo(item.correo) === normalizarCorreo(usuario.correo),
-    )
-    respuesta.yaPostulo = Boolean(
-      estudiante &&
-        POSTULACIONES.some(
-          (postulacion) =>
-            postulacion.ofertaId === oferta.id &&
-            postulacion.estudianteId === estudiante.id,
-        ),
-    )
+  if (!vigente && !postulacion) {
+    throw new ErrorApi('La oferta no existe', 404)
   }
 
-  return respuesta
+  return {
+    oferta: { ...ofertaDetalle(oferta), vigente },
+    yaPostulo: Boolean(postulacion),
+    estadoPostulacion: postulacion ? postulacion.estado : null,
+  }
 }
 
 export async function crearOfertaMock(datos) {
@@ -656,7 +668,7 @@ export async function crearOfertaMock(datos) {
     )
   }
 
-  if (datos.fechaLimite < fechaEnDias(0)) {
+  if (datos.fechaLimite <= fechaEnDias(0)) {
     throw new ErrorApi('Datos inválidos', 400, [
       {
         campo: 'fechaLimite',
@@ -688,30 +700,72 @@ export async function listarOfertasEmpresaMock() {
   await esperar(350)
   const empresa = buscarEmpresaActual()
 
-  const ofertas = OFERTAS.filter(
+  const propias = OFERTAS.filter(
     (oferta) =>
       oferta.empresaId === empresa.id && oferta.estado !== 'ELIMINADA',
   )
+
+  propias.forEach((oferta) => {
+    if (oferta.estado === 'PUBLICADA' && !estaVigente(oferta)) {
+      oferta.estado = 'VENCIDA'
+    }
+  })
+
+  const ofertas = propias
     .sort((a, b) => b.fechaPublicacion.localeCompare(a.fechaPublicacion))
     .map(ofertaDeEmpresa)
 
   return { ofertas }
 }
 
-export async function cerrarOfertaMock(id) {
+export async function cambiarEstadoOfertaMock(id, estado) {
   await esperar(300)
   const empresa = buscarEmpresaActual()
+
+  if (empresa.estadoAprobacion !== 'APROBADA') {
+    throw new ErrorApi(
+      'Tu empresa aún no está aprobada para gestionar ofertas',
+      403,
+    )
+  }
+
+  if (!['PUBLICADA', 'CERRADA'].includes(estado)) {
+    throw new ErrorApi('El estado indicado no es válido', 400)
+  }
+
   const oferta = OFERTAS.find((item) => item.id === Number(id))
 
-  if (!oferta) {
+  if (!oferta || oferta.estado === 'ELIMINADA') {
     throw new ErrorApi('La oferta no existe', 404)
   }
 
   if (oferta.empresaId !== empresa.id) {
-    throw new ErrorApi('No tienes permiso para cerrar esta oferta', 403)
+    throw new ErrorApi('No tienes permiso sobre esta oferta', 403)
   }
 
-  oferta.estado = 'CERRADA'
+  if (oferta.estado === 'PUBLICADA' && !estaVigente(oferta)) {
+    oferta.estado = 'VENCIDA'
+  }
+
+  if (oferta.estado === estado) {
+    throw new ErrorApi(`La oferta ya está en estado ${estado}`, 409)
+  }
+
+  if (!['PUBLICADA', 'CERRADA'].includes(oferta.estado)) {
+    throw new ErrorApi(
+      'No se puede cambiar el estado de una oferta vencida, oculta o en borrador',
+      409,
+    )
+  }
+
+  if (estado === 'PUBLICADA' && oferta.fechaLimite <= fechaEnDias(0)) {
+    throw new ErrorApi(
+      'No se puede reactivar una oferta con la fecha límite vencida',
+      409,
+    )
+  }
+
+  oferta.estado = estado
   return { oferta: { id: oferta.id, estado: oferta.estado } }
 }
 
@@ -794,8 +848,16 @@ export async function crearPostulacionMock(ofertaId) {
     throw new ErrorApi('La oferta no existe', 404)
   }
 
-  if (!estaVigente(oferta)) {
-    throw new ErrorApi('La oferta ya no está vigente', 400)
+  if (oferta.estado === 'PUBLICADA' && !estaVigente(oferta)) {
+    oferta.estado = 'VENCIDA'
+    throw new ErrorApi(
+      'La oferta está vencida y no admite nuevas postulaciones',
+      409,
+    )
+  }
+
+  if (oferta.estado !== 'PUBLICADA') {
+    throw new ErrorApi('La oferta ya no está vigente', 409)
   }
 
   const existente = POSTULACIONES.find(
@@ -841,6 +903,7 @@ export async function listarMisPostulacionesMock() {
       if (!oferta) {
         return null
       }
+      const empresa = empresaDeOferta(oferta)
       return {
         id: postulacion.id,
         estado: postulacion.estado,
@@ -849,8 +912,17 @@ export async function listarMisPostulacionesMock() {
         oferta: {
           id: oferta.id,
           titulo: oferta.titulo,
+          tipo: oferta.tipo,
+          modalidad: oferta.modalidad,
+          area: oferta.area,
+          ubicacion: oferta.ubicacion,
           estado: oferta.estado,
-          empresa: { razonSocial: empresaDeOferta(oferta)?.razonSocial || '' },
+          fechaLimite: oferta.fechaLimite,
+          empresa: {
+            id: empresa?.id,
+            usuarioId: empresa?.usuarioId,
+            razonSocial: empresa?.razonSocial || '',
+          },
         },
       }
     })
@@ -888,10 +960,13 @@ export async function listarPostulacionesDeOfertaMock(ofertaId) {
         estado: postulacion.estado,
         fechaPostulacion: postulacion.fechaPostulacion,
         estudiante: {
+          id: estudiante.id,
+          usuarioId: estudiante.usuarioId,
           nombres: estudiante.nombres,
           apellidos: estudiante.apellidos,
           carrera: estudiante.carrera,
-          correo: estudiante.correo,
+          descripcionPerfil: estudiante.descripcionPerfil || '',
+          institucion: { nombre: estudiante.institucion },
         },
       }
     })
@@ -910,6 +985,13 @@ export async function cambiarEstadoPostulacionMock(id, estado) {
     'RECHAZADA',
   ]
 
+  if (empresa.estadoAprobacion !== 'APROBADA') {
+    throw new ErrorApi(
+      'Tu empresa aún no está aprobada para gestionar postulaciones',
+      403,
+    )
+  }
+
   if (!estadosPermitidos.includes(estado)) {
     throw new ErrorApi('El estado indicado no es válido', 400)
   }
@@ -922,8 +1004,27 @@ export async function cambiarEstadoPostulacionMock(id, estado) {
 
   const oferta = OFERTAS.find((item) => item.id === postulacion.ofertaId)
 
-  if (!oferta || oferta.empresaId !== empresa.id) {
-    throw new ErrorApi('No tienes permiso para cambiar esta postulación', 403)
+  if (!oferta || oferta.estado === 'ELIMINADA') {
+    throw new ErrorApi('Postulación no encontrada', 404)
+  }
+
+  if (oferta.empresaId !== empresa.id) {
+    throw new ErrorApi('No tienes permiso sobre esta postulación', 403)
+  }
+
+  if (postulacion.estado === 'CANCELADA') {
+    throw new ErrorApi('El estudiante canceló esta postulación', 409)
+  }
+
+  if (['ACEPTADA', 'RECHAZADA'].includes(postulacion.estado)) {
+    throw new ErrorApi(
+      'La postulación ya fue resuelta y no se puede cambiar',
+      409,
+    )
+  }
+
+  if (postulacion.estado === estado) {
+    throw new ErrorApi(`La postulación ya está en estado ${estado}`, 409)
   }
 
   postulacion.estado = estado

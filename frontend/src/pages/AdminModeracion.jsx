@@ -5,6 +5,7 @@ import {
   moderarOferta,
   suspenderCuenta,
 } from '../api/admin'
+import { listarReportes } from '../api/reportes'
 import Avatar from '../components/Avatar'
 import Cargando from '../components/Cargando'
 import EstadoVacio from '../components/EstadoVacio'
@@ -14,7 +15,9 @@ import { solicitarMotivo } from '../utils/alertas'
 import {
   ETIQUETA_ESTADO_CUENTA,
   ETIQUETA_ESTADO_OFERTA,
+  ETIQUETA_ESTADO_REPORTE,
   ETIQUETA_TIPO,
+  formatearFechaHora,
   varianteEstado,
 } from '../utils/formato'
 import { ETIQUETA_ROL } from '../utils/roles'
@@ -22,15 +25,18 @@ import { ETIQUETA_ROL } from '../utils/roles'
 const PESTANAS = [
   { id: 'ofertas', texto: 'Ofertas' },
   { id: 'cuentas', texto: 'Cuentas' },
+  { id: 'reportes', texto: 'Reportes' },
 ]
 
 export default function AdminModeracion() {
   const [pestana, setPestana] = useState('ofertas')
   const [ofertas, setOfertas] = useState([])
   const [usuarios, setUsuarios] = useState([])
+  const [reportes, setReportes] = useState([])
   const [estadoOferta, setEstadoOferta] = useState('')
   const [rol, setRol] = useState('')
   const [estadoCuenta, setEstadoCuenta] = useState('')
+  const [estadoReporte, setEstadoReporte] = useState('PENDIENTE')
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [mensaje, setMensaje] = useState('')
@@ -96,6 +102,37 @@ export default function AdminModeracion() {
     }
   }, [pestana, rol, estadoCuenta])
 
+  useEffect(() => {
+    if (pestana !== 'reportes') {
+      return undefined
+    }
+
+    let activo = true
+
+    listarReportes({ estado: estadoReporte })
+      .then((respuesta) => {
+        if (activo) {
+          setReportes(respuesta.reportes)
+        }
+      })
+      .catch((fallo) => {
+        if (activo) {
+          setError(
+            fallo?.mensaje || 'No se pudieron cargar los reportes.',
+          )
+        }
+      })
+      .finally(() => {
+        if (activo) {
+          setCargando(false)
+        }
+      })
+
+    return () => {
+      activo = false
+    }
+  }, [pestana, estadoReporte])
+
   const cambiarPestana = (nueva) => {
     if (nueva === pestana) {
       return
@@ -107,6 +144,7 @@ export default function AdminModeracion() {
     setError('')
     setOfertas([])
     setUsuarios([])
+    setReportes([])
   }
 
   const cambiarEstadoOferta = (evento) => {
@@ -131,6 +169,14 @@ export default function AdminModeracion() {
     setError('')
     setUsuarios([])
     setEstadoCuenta(evento.target.value)
+  }
+
+  const cambiarEstadoReporte = (evento) => {
+    setCargando(true)
+    setMensaje('')
+    setError('')
+    setReportes([])
+    setEstadoReporte(evento.target.value)
   }
 
   const moderar = async (oferta, decision) => {
@@ -206,13 +252,15 @@ export default function AdminModeracion() {
     }
   }
 
-  const total = pestana === 'ofertas' ? ofertas.length : usuarios.length
-  let textoResumen = ''
+  let total = ofertas.length
+  let textoResumen = total === 1 ? 'oferta encontrada' : 'ofertas encontradas'
 
-  if (pestana === 'ofertas') {
-    textoResumen = total === 1 ? 'oferta encontrada' : 'ofertas encontradas'
-  } else {
+  if (pestana === 'cuentas') {
+    total = usuarios.length
     textoResumen = total === 1 ? 'cuenta encontrada' : 'cuentas encontradas'
+  } else if (pestana === 'reportes') {
+    total = reportes.length
+    textoResumen = total === 1 ? 'reporte encontrado' : 'reportes encontrados'
   }
 
   return (
@@ -221,7 +269,10 @@ export default function AdminModeracion() {
         <div>
           <p className="pagina__etiqueta">Panel de administración</p>
           <h1>Moderación</h1>
-          <p>Revisa ofertas y cuentas, y aplica las medidas necesarias.</p>
+          <p>
+            Revisa ofertas, cuentas y reportes, y aplica las medidas
+            necesarias.
+          </p>
         </div>
         {!cargando && (
           <div className="pagina__resumen" aria-live="polite">
@@ -447,6 +498,115 @@ export default function AdminModeracion() {
                         </button>
                       </div>
                     )}
+                  </article>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {pestana === 'reportes' && (
+        <div
+          id="panel-reportes"
+          role="tabpanel"
+          aria-labelledby="pestana-reportes"
+        >
+          <div className="moderacion__filtros">
+            <div className="campo">
+              <label htmlFor="moderacion-estado-reporte">
+                Estado del reporte
+              </label>
+              <select
+                id="moderacion-estado-reporte"
+                value={estadoReporte}
+                onChange={cambiarEstadoReporte}
+              >
+                {Object.entries(ETIQUETA_ESTADO_REPORTE).map(
+                  ([valor, texto]) => (
+                    <option key={valor} value={valor}>
+                      {texto}
+                    </option>
+                  ),
+                )}
+              </select>
+            </div>
+          </div>
+
+          {cargando && (
+            <div className="cargando-pagina">
+              <Cargando texto="Cargando reportes..." />
+            </div>
+          )}
+
+          {!cargando && !error && reportes.length === 0 && (
+            <EstadoVacio>
+              No hay reportes con el estado seleccionado.
+            </EstadoVacio>
+          )}
+
+          {!cargando && !error && reportes.length > 0 && (
+            <div className="moderacion__lista">
+              {reportes.map((reporte) => {
+                const oferta = reporte.oferta
+                const usuarioReporta = reporte.usuario
+
+                return (
+                  <article
+                    className="moderacion-item panel"
+                    key={reporte.id}
+                  >
+                    <div className="moderacion-item__cabecera">
+                      <div className="moderacion-item__identidad">
+                        <h2>
+                          {oferta?.titulo || `Oferta #${reporte.ofertaId}`}
+                        </h2>
+                        <p>
+                          {oferta?.empresa?.razonSocial || 'Empresa'}
+                        </p>
+                      </div>
+                      <div className="moderacion-item__etiquetas">
+                        {oferta?.estado && (
+                          <Etiqueta
+                            variante={varianteEstado(oferta.estado)}
+                          >
+                            {ETIQUETA_ESTADO_OFERTA[oferta.estado] ||
+                              oferta.estado}
+                          </Etiqueta>
+                        )}
+                        <Etiqueta
+                          variante={varianteEstado(reporte.estado)}
+                        >
+                          {ETIQUETA_ESTADO_REPORTE[reporte.estado] ||
+                            reporte.estado}
+                        </Etiqueta>
+                      </div>
+                    </div>
+
+                    <p className="reporte-item__motivo">
+                      {reporte.motivo}
+                    </p>
+
+                    <dl className="reporte-item__datos">
+                      <div>
+                        <dt>Reportado por</dt>
+                        <dd>
+                          {usuarioReporta?.correo || 'Usuario'}
+                          {usuarioReporta?.rol && (
+                            <Etiqueta variante="tipo">
+                              {ETIQUETA_ROL[usuarioReporta.rol] ||
+                                usuarioReporta.rol}
+                            </Etiqueta>
+                          )}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Fecha del reporte</dt>
+                        <dd>
+                          {formatearFechaHora(reporte.fechaReporte)}
+                        </dd>
+                      </div>
+                    </dl>
                   </article>
                 )
               })}

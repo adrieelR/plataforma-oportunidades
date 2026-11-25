@@ -9,5 +9,5 @@ const router = Router();
 router.use(autenticar, requerirRol('ESTUDIANTE'));
 
 router.get('/ofertas', busquedaController.buscar);
-
+router.get('/ofertas/:id', /* mismos middlewares que la búsqueda */ busquedaController.detalle);
 module.exports = router;
