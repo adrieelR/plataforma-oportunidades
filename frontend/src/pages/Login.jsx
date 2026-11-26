@@ -92,7 +92,7 @@ export default function Login() {
   return (
     <AuthLayout
       titulo="Iniciar sesión"
-      descripcion="Accede con tu cuenta para revisar las oportunidades disponibles."
+      descripcion="Accede con tu cuenta de PrimeraPega para revisar las oportunidades disponibles."
       marcaTitulo="Conecta con oportunidades reales"
       marcaTexto="Encuentra prácticas, empleos y capacitaciones, o publica ofertas para llegar a nuevos talentos."
     >

@@ -71,7 +71,7 @@ export default function InicioPublico() {
       <section className="inicio-hero">
         <div className="inicio-hero__contenido">
           <p className="inicio-hero__etiqueta">
-            Oportunidades para estudiantes de educación superior
+            PrimeraPega · De la sala de clases a la pega
           </p>
           <h1>Tu primera oportunidad empieza aquí</h1>
           <p className="inicio-hero__texto">

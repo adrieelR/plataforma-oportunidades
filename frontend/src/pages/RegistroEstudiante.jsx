@@ -131,7 +131,7 @@ export default function RegistroEstudiante() {
   return (
     <AuthLayout
       titulo="Crear cuenta de estudiante"
-      descripcion="Usa tu correo institucional para registrarte en la plataforma."
+      descripcion="Usa tu correo institucional para registrarte en PrimeraPega."
       ancho
       marcaTitulo="Tu perfil, tus oportunidades"
       marcaTexto="Crea tu cuenta para postular a prácticas, empleos y capacitaciones desde un solo lugar."
